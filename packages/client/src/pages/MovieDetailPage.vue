@@ -19,6 +19,17 @@
         <p v-else class="no-overview">No description available.</p>
       </div>
     </div>
+
+    <div class="player-wrapper" v-if="embedUrl">
+      <iframe
+        class="player"
+        :src="embedUrl"
+        frameborder="0"
+        allow="autoplay; fullscreen; picture-in-picture"
+        allowfullscreen
+        referrerpolicy="no-referrer"
+      ></iframe>
+    </div>
   </div>
 
   <div v-else-if="state === 'loading'" class="loading">Loading...</div>
@@ -36,6 +47,9 @@ const route = useRoute();
 const router = useRouter();
 const movie = ref<Movie>();
 const state = ref<State>('idle');
+
+const baseUrl = 'https://vidsrc.xyz/embed/movie/';
+const embedUrl = ref<string>('');
 
 const posterUrl = computed(() =>
   movie.value?.poster_path
@@ -65,6 +79,7 @@ const load = async () => {
     const res = await fetch(`/api/movies/${id}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     movie.value = await res.json();
+    embedUrl.value = `${baseUrl}${id}`;
     state.value = 'loaded';
   } catch (e) {
     // eslint-disable-next-line no-console
@@ -133,6 +148,23 @@ onMounted(load);
 .no-overview {
   color: #777;
   font-style: italic;
+}
+.player-wrapper {
+  position: relative;
+  margin-top: 1rem;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 */
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+.player {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
 }
 
 @media (max-width: 768px) {
