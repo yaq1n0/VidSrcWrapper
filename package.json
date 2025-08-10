@@ -1,0 +1,49 @@
+{
+  "name": "vidsrc-wrapper",
+  "version": "1.0.0",
+  "description": "A simple TMDB search application",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@vidsrc-wrapper/server & npm run dev --workspace=@vidsrc-wrapper/client",
+    "build": "npm run build --workspace=@vidsrc-wrapper/data && npm run build --workspace=@vidsrc-wrapper/server && npm run build --workspace=@vidsrc-wrapper/client",
+    "start": "npm run start --workspace=@vidsrc-wrapper/server",
+    "build:data": "npm run build --workspace=@vidsrc-wrapper/data",
+    "build:server": "npm run build --workspace=@vidsrc-wrapper/server",
+    "build:client": "npm run build --workspace=@vidsrc-wrapper/client",
+    "type-check": "npm run type-check --workspace=@vidsrc-wrapper/data && npm run type-check --workspace=@vidsrc-wrapper/server && npm run type-check --workspace=@vidsrc-wrapper/client",
+    "type-check:data": "npm run type-check --workspace=@vidsrc-wrapper/data",
+    "type-check:server": "npm run type-check --workspace=@vidsrc-wrapper/server",
+    "type-check:client": "npm run type-check --workspace=@vidsrc-wrapper/client",
+    "prettier": "prettier --write \"packages/**/*.{ts,js,vue,json,css,scss}\"",
+    "prettier:check": "prettier --check \"packages/**/*.{ts,js,vue,json,css,scss}\"",
+    "prettier:data": "prettier --write \"packages/data/**/*.{ts,js,json}\"",
+    "prettier:server": "prettier --write \"packages/server/**/*.{ts,js,json}\"",
+    "prettier:client": "prettier --write \"packages/client/**/*.{vue,ts,js,json,css,scss}\"",
+    "lint": "eslint \"packages/**/*.{ts,js,vue}\"",
+    "lint:fix": "eslint \"packages/**/*.{ts,js,vue}\" --fix",
+    "lint:data": "eslint \"packages/data/**/*.{ts,js}\"",
+    "lint:server": "eslint \"packages/server/**/*.{ts,js}\"",
+    "lint:client": "eslint \"packages/client/**/*.{vue,ts,js}\""
+  },
+  "devDependencies": {
+    "@types/node": "^24.2.1",
+    "@typescript-eslint/eslint-plugin": "^8.39.0",
+    "@typescript-eslint/parser": "^8.39.0",
+    "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/eslint-config-typescript": "^14.6.0",
+    "concurrently": "^9.2.0",
+    "eslint": "^9.33.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-vue": "^10.4.0",
+    "globals": "^16.3.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
