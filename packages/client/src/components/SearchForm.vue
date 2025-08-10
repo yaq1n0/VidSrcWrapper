@@ -5,7 +5,7 @@
         <input
           v-model="query"
           type="text"
-          placeholder="Search for movies..."
+          :placeholder="placeholder || 'Search for movies...'"
           class="search-input"
           :disabled="loading"
           ref="searchInput"
@@ -29,6 +29,7 @@ import { ref, onMounted } from 'vue';
 
 defineProps<{
   loading: boolean;
+  placeholder?: string;
 }>();
 
 const emit = defineEmits<{

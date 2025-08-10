@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serve } from '@hono/node-server';
-import type { Movie, APIError } from '@vidsrc-wrapper/data';
 import { TMDBService } from './services/tmdb.js';
+import { createHandlers } from './handlers/handlers.js';
+import type { StatusCode } from 'hono/utils/http-status';
 import { CONFIG } from './config.js';
 
 const app = new Hono();
@@ -12,7 +13,7 @@ const tmdbService = new TMDBService();
 app.use(
   '/*',
   cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000'], // Add your frontend URLs
+    origin: ['http://localhost:5173', 'http://localhost:3000'], // Add your frontend URLs (TODO: I don't think this will work if I deploy this in prod/over internet)
     allowMethods: ['GET', 'OPTIONS'],
     allowHeaders: ['Content-Type'],
   })
@@ -23,69 +24,53 @@ app.get('/', c => {
   return c.json({ message: 'TMDB Search API Server', status: 'healthy' });
 });
 
+const handlers = createHandlers(tmdbService);
+
 // Movie search endpoint
-app.get('/api/movies', async c => {
-  try {
-    const query = c.req.query('query');
-    const page = parseInt(c.req.query('page') || '1');
-
-    if (!query) {
-      const error: APIError = {
-        error: 'Missing query parameter',
-        message: 'Please provide a search query',
-      };
-      return c.json(error, 400);
-    }
-
-    if (page < 1 || page > 1000) {
-      const error: APIError = {
-        error: 'Invalid page parameter',
-        message: 'Page must be between 1 and 1000',
-      };
-      return c.json(error, 400);
-    }
-
-    const searchResponse = await tmdbService.searchMovies(query, page);
-
-    // Return just the movies array as requested
-    const movies: Movie[] = searchResponse.results;
-    return c.json(movies);
-  } catch (error) {
-    console.error('Error in /api/movies:', error);
-    const apiError: APIError = {
-      error: 'Internal server error',
-      message:
-        error instanceof Error ? error.message : 'Unknown error occurred',
-    };
-    return c.json(apiError, 500);
-  }
+app.get('/api/movies', async context => {
+  const query = context.req.query('query');
+  const page = parseInt(context.req.query('page') || '1');
+  const result = await handlers.searchMovies({ query, page });
+  context.status(result.status as StatusCode);
+  return context.json(result.body);
 });
 
 // Movie details endpoint
-app.get('/api/movies/:id', async c => {
-  try {
-    const idParam = c.req.param('id');
-    const movieId = parseInt(idParam, 10);
+app.get('/api/movies/:id', async context => {
+  const idParam = context.req.param('id');
+  const movieId = parseInt(idParam, 10);
+  const result = await handlers.getMovieById({ id: movieId });
+  context.status(result.status as StatusCode);
+  return context.json(result.body);
+});
 
-    if (Number.isNaN(movieId) || movieId <= 0) {
-      const error: APIError = {
-        error: 'Invalid id parameter',
-        message: 'Movie id must be a positive integer',
-      };
-      return c.json(error, 400);
-    }
+// TV search endpoint
+app.get('/api/tv', async context => {
+  const query = context.req.query('query');
+  const page = parseInt(context.req.query('page') || '1');
+  const result = await handlers.searchShows({ query, page });
+  context.status(result.status as StatusCode);
+  return context.json(result.body);
+});
 
-    const movie = await tmdbService.getMovieById(movieId);
-    return c.json(movie);
-  } catch (error) {
-    console.error('Error in /api/movies/:id:', error);
-    const apiError: APIError = {
-      error: 'Internal server error',
-      message:
-        error instanceof Error ? error.message : 'Unknown error occurred',
-    };
-    return c.json(apiError, 500);
-  }
+// TV details endpoint
+app.get('/api/tv/:id', async context => {
+  const idParam = context.req.param('id');
+  const showId = parseInt(idParam, 10);
+  const result = await handlers.getShowById({ id: showId });
+  context.status(result.status as StatusCode);
+  return context.json(result.body);
+});
+
+// TV season episodes endpoint
+app.get('/api/tv/:id/season/:seasonNumber', async context => {
+  const idParam = context.req.param('id');
+  const seasonParam = context.req.param('seasonNumber');
+  const showId = parseInt(idParam, 10);
+  const seasonNumber = parseInt(seasonParam, 10);
+  const result = await handlers.getSeasonEpisodes({ id: showId, seasonNumber });
+  context.status(result.status as StatusCode);
+  return context.json(result.body);
 });
 
 // Start server
@@ -93,12 +78,12 @@ const port = CONFIG.PORT;
 console.log(`🚀 Server starting on port ${port}`);
 console.log(`📡 TMDB API key configured: ${CONFIG.TMDB_API_KEY ? '✅' : '❌'}`);
 
-serve({
-  fetch: app.fetch,
-  port,
-});
+serve({ fetch: app.fetch, port });
 
 console.log(`🌟 Server running at http://localhost:${port}`);
 console.log(
-  `🔍 Search endpoint: http://localhost:${port}/api/movies?query=batman`
+  `🔍 Movies endpoint: http://localhost:${port}/api/movies?query=batman`
+);
+console.log(
+  `📺 Shows endpoint: http://localhost:${port}/api/tv?query=breaking+bad`
 );

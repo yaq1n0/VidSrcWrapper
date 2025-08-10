@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('search flow shows results and opens detail', async ({ page }) => {
   await page.goto('/');
   await expect(
-    page.getByRole('heading', { name: '🎬 Movie Search' })
+    page.getByRole('heading', { name: '🎬 VidSrcWrapper' })
   ).toBeVisible();
 
   const input = page.getByPlaceholder('Search for movies...');

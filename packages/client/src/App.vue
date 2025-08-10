@@ -1,8 +1,8 @@
 <template>
   <div class="app">
     <header class="header">
-      <h1>🎬 Movie Search</h1>
-      <p>Search movies using The Movie Database</p>
+      <h1>🎬 VidSrcWrapper</h1>
+      <p>Search and watch movies and shows, locally hosted (ish)!</p>
     </header>
 
     <main class="main">
