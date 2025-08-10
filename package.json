@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "npm run dev --workspace=@vidsrc-wrapper/server & npm run dev --workspace=@vidsrc-wrapper/client",
     "build": "npm run build --workspace=@vidsrc-wrapper/data && npm run build --workspace=@vidsrc-wrapper/server && npm run build --workspace=@vidsrc-wrapper/client",
-    "start": "npm run start --workspace=@vidsrc-wrapper/server",
+    "start": "npm run start --workspace=@vidsrc-wrapper/server & npm run dev --workspace=@vidsrc-wrapper/client",
     "build:data": "npm run build --workspace=@vidsrc-wrapper/data",
     "build:server": "npm run build --workspace=@vidsrc-wrapper/server",
     "build:client": "npm run build --workspace=@vidsrc-wrapper/client",
@@ -42,8 +42,5 @@
     "globals": "^16.3.0",
     "prettier": "^3.6.2",
     "typescript": "^5.9.2"
-  },
-  "engines": {
-    "node": ">=18.0.0"
   }
 }

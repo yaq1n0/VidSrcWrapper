@@ -1,12 +1,14 @@
 # VidSrc Wrapper - TMDB Movie Search
 
-A TypeScript movie search application using The Movie Database (TMDB) API.
+A TypeScript movie search application using The Movie Database (TMDB) API, which also happens hook into VidSrc.. and in theory any other _legal_ streaming service that uses IMDB/TMDB ids.
 
-**Stack:** Vue 3 + TypeScript frontend, Hono backend, shared types
+This isn't hosted anywhere, but it's made in such a way to make it very simple to run on your own servers.
+
+**Stack:** Full-stack Typescript, Vue 3 + Vite client, Hono server
 
 ## Setup
 
-**Prerequisites:** Node.js 18+ and TMDB Read Access Token ([get one here](https://www.themoviedb.org/settings/api))
+**Prerequisites:** TMDB Read Access Token (Bearer auth) ([get one here](https://www.themoviedb.org/settings/api))
 
 1. **Install dependencies:**
 
@@ -18,12 +20,18 @@ A TypeScript movie search application using The Movie Database (TMDB) API.
 
    ```env
    TMDB_API_KEY=your_tmdb_read_access_token_here
-   PORT=3001
    ```
 
-3. **Build shared types:**
+3. **Build**
+
    ```bash
-   npm run build:data
+   npm run build
+   ```
+
+4. **Start**
+
+   ```bash
+   npm run start
    ```
 
 ## Development
@@ -52,41 +60,3 @@ npm run prettier      # Format code
 npm run lint          # Lint code
 npm run lint:fix      # Auto-fix linting issues
 ```
-
-## VS Code Setup
-
-Included configuration:
-
-- Format on save with Prettier
-- ESLint auto-fix on save
-- Vue and TypeScript support
-
-**Recommended extensions:** Prettier, ESLint, Vue Language Features (Volar)
-
-## Project Structure
-
-```
-packages/
-├── data/     # Shared TypeScript types
-├── server/   # Hono backend API
-└── client/   # Vue frontend
-```
-
-## API
-
-- `GET /api/movies?query=batman&page=1` - Search movies
-- `GET /` - Health check
-
-## Components
-
-- **SearchForm** - Search input with loading states
-- **MovieList** - Results grid with loading/empty states
-- **MovieCard** - Movie poster, title, year, rating, overview
-
-## Deployment
-
-Deploy to any Node.js hosting. Set `TMDB_API_KEY` environment variable in your deployment environment.
-
-## License
-
-MIT
