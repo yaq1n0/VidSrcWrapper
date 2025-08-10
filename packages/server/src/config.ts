@@ -17,7 +17,10 @@ export const CONFIG = {
 } as const;
 
 // Validate required environment variables
-if (!CONFIG.TMDB_API_KEY) {
+// During tests, avoid hard exiting to allow unit tests to mock network calls
+const isTestEnv =
+  process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
+if (!CONFIG.TMDB_API_KEY && !isTestEnv) {
   console.error('Error: TMDB_API_KEY environment variable is required');
   console.error(
     'Please set your TMDB Read Access Token (not API v3 key) in the .env file'
