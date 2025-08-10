@@ -7,16 +7,16 @@ export const TMDBMovieResponseSchema = z.object({
   title: z.string(),
   original_title: z.string(),
   overview: z.string(),
-  release_date: z.string(),
+  release_date: z.string().optional(),
   poster_path: z.string().nullable(),
   backdrop_path: z.string().nullable(),
-  vote_average: z.number(),
-  vote_count: z.number(),
-  popularity: z.number(),
-  genre_ids: z.array(z.number()),
+  vote_average: z.number().optional(),
+  vote_count: z.number().optional(),
+  popularity: z.number().optional(),
+  genre_ids: z.array(z.number()).optional(),
   adult: z.boolean(),
   original_language: z.string(),
-  video: z.boolean(),
+  video: z.boolean().optional(),
 });
 
 // Zod schema for TMDB Search response

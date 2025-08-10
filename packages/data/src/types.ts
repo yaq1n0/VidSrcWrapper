@@ -42,16 +42,16 @@ export interface TMDBMovieResponse {
   title: string;
   original_title: string;
   overview: string;
-  release_date: string;
+  release_date?: string;
   poster_path: string | null;
   backdrop_path: string | null;
-  vote_average: number;
-  vote_count: number;
-  popularity: number;
-  genre_ids: number[];
+  vote_average?: number;
+  vote_count?: number;
+  popularity?: number;
+  genre_ids?: number[];
   adult: boolean;
   original_language: string;
-  video: boolean;
+  video?: boolean;
 }
 
 export interface TMDBSearchResponse {
