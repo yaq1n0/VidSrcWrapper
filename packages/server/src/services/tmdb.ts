@@ -15,10 +15,19 @@ import {
   validateTMDBMovieResponse,
   validateTMDBTVDetailsResponse,
   validateTMDBSeasonDetailsResponse,
+  type IHttpClient,
+  HttpError,
+  getHttpClient,
 } from '@vidsrc-wrapper/data';
 import { CONFIG } from '../config.js';
 
 export class TMDBService {
+  private readonly http: IHttpClient;
+
+  constructor(http: IHttpClient = getHttpClient()) {
+    this.http = http;
+  }
+
   /**
    * Fetch data from TMDB API
    * @param endpoint - The API endpoint to fetch from
@@ -43,26 +52,24 @@ export class TMDBService {
       'Content-Type': 'application/json',
     };
 
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`TMDB API Error Details:`, {
-        status: response.status,
-        statusText: response.statusText,
-        url: url.toString(),
-        headers: Object.fromEntries(response.headers.entries()),
-        body: errorText,
-      });
-      throw new Error(
-        `TMDB API error: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`
-      );
+    let data: unknown;
+    try {
+      data = await this.http.getJson(url.toString(), { headers });
+    } catch (err) {
+      if (err instanceof HttpError) {
+        console.error(`TMDB API Error Details:`, {
+          status: err.status,
+          statusText: err.statusText,
+          url: err.url,
+          headers: err.headers,
+          body: err.body,
+        });
+        throw new Error(
+          `TMDB API error: ${err.status} ${err.statusText}${err.body ? ` - ${err.body}` : ''}`
+        );
+      }
+      throw err;
     }
-
-    const data = await response.json();
 
     // Validate the response if a validator is provided
     if (validator) {
@@ -74,7 +81,7 @@ export class TMDBService {
       }
     }
 
-    return data;
+    return data as T;
   }
 
   /**

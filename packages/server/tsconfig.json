@@ -4,12 +4,8 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "baseUrl": ".",
-    "paths": {
-      "@vidsrc-wrapper/data": ["../data/dist/index.d.ts"],
-      "@vidsrc-wrapper/data/*": ["../data/dist/*"]
-    },
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,

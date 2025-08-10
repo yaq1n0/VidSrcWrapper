@@ -23,7 +23,7 @@ jobs:
         run: npm run build:data
 
       - name: Unit tests (workspaces)
-        run: npm run test:unit
+        run: npm run test
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
@@ -31,4 +31,4 @@ jobs:
       - name: E2E tests
         env:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-        run: npm run test:e2e
+        run: npm run e2e

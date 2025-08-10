@@ -1,7 +1,5 @@
 <template>
   <div class="detail" v-if="state === 'loaded'">
-    <button class="back" @click="goBack">← Back</button>
-
     <div class="hero" :style="bgStyle"></div>
     <div class="card">
       <img v-if="movie" :src="posterUrl" :alt="movie?.title" class="poster" />
@@ -38,13 +36,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import type { Movie } from '@vidsrc-wrapper/data';
 
 type State = 'idle' | 'loading' | 'loaded' | 'error';
 
 const route = useRoute();
-const router = useRouter();
 const movie = ref<Movie>();
 const state = ref<State>('idle');
 
@@ -63,10 +60,6 @@ const bgStyle = computed(() => ({
     : 'none',
 }));
 
-const goBack = () => {
-  router.back();
-};
-
 const load = async () => {
   const idParam = route.params.id as string;
   const id = Number(idParam);
@@ -76,9 +69,8 @@ const load = async () => {
   }
   state.value = 'loading';
   try {
-    const res = await fetch(`/api/movies/${id}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    movie.value = await res.json();
+    const { getHttpClient } = await import('@vidsrc-wrapper/data');
+    movie.value = await getHttpClient().getJson(`/api/movies/${id}`);
     embedUrl.value = `${baseUrl}${id}`;
     state.value = 'loaded';
   } catch (e) {

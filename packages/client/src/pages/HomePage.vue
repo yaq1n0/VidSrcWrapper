@@ -65,15 +65,15 @@ const handleSearch = async (query: string) => {
   loading.value = true;
   try {
     const endpoint = mode.value === 'movies' ? '/api/movies' : '/api/tv';
-    const response = await fetch(
-      `${endpoint}?query=${encodeURIComponent(trimmed)}`
-    );
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const data = await response.json();
+    const { getHttpClient } = await import('@vidsrc-wrapper/data');
     if (mode.value === 'movies') {
-      movies.value = data;
+      movies.value = await getHttpClient().getJson(
+        `${endpoint}?query=${encodeURIComponent(trimmed)}`
+      );
     } else {
-      shows.value = data;
+      shows.value = await getHttpClient().getJson(
+        `${endpoint}?query=${encodeURIComponent(trimmed)}`
+      );
     }
   } catch (error) {
     // eslint-disable-next-line no-console

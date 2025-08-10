@@ -1,7 +1,5 @@
 <template>
   <div class="detail" v-if="state === 'loaded'">
-    <button class="back" @click="goBack">← Back</button>
-
     <div class="hero" :style="bgStyle"></div>
     <div class="card">
       <img v-if="show" :src="posterUrl" :alt="show?.name" class="poster" />
@@ -59,38 +57,47 @@
           {{ selectedEpisode.name }}</strong
         >
         <small v-if="selectedEpisode.air_date">{{
-          new Date(selectedEpisode.air_date).toLocaleDateString()
+          ` ${new Date(selectedEpisode.air_date).toLocaleDateString()}`
         }}</small>
         <p v-if="selectedEpisode.overview">{{ selectedEpisode.overview }}</p>
+        <div class="player-wrapper" v-if="embedUrl">
+          <iframe
+            class="player"
+            :src="embedUrl"
+            frameborder="0"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowfullscreen
+            referrerpolicy="no-referrer"
+          ></iframe>
+        </div>
       </div>
 
       <div class="episodes-grid">
         <div
           class="episode-card"
-          v-for="e in episodes"
-          :key="e.id"
-          :class="{ selected: selectedEpisode?.id === e.id }"
-          @click="selectEpisode(e)"
+          v-for="episode in episodes"
+          :key="episode.id"
+          :class="{ selected: selectedEpisode?.id === episode.id }"
+          @click="selectEpisode(episode)"
           role="button"
           tabindex="0"
-          @keydown.enter="selectEpisode(e)"
+          @keydown.enter="selectEpisode(episode)"
         >
           <div class="episode-thumb">
             <img
-              v-if="e.still_path"
-              :src="`https://image.tmdb.org/t/p/w300${e.still_path}`"
-              :alt="e.name"
+              v-if="episode.still_path"
+              :src="`https://image.tmdb.org/t/p/w300${episode.still_path}`"
+              :alt="episode.name"
             />
             <div v-else class="episode-placeholder">
-              {{ e.episode_number }}
+              {{ episode.episode_number }}
             </div>
           </div>
           <div class="episode-info">
-            <strong>{{ e.episode_number }}. {{ e.name }}</strong>
-            <small v-if="e.air_date">{{
-              new Date(e.air_date).toLocaleDateString()
+            <strong>{{ episode.episode_number }}. {{ episode.name }}</strong>
+            <small v-if="episode.air_date">{{
+              new Date(episode.air_date).toLocaleDateString()
             }}</small>
-            <p v-if="e.overview">{{ e.overview }}</p>
           </div>
         </div>
       </div>
@@ -116,6 +123,9 @@ const selectedSeason = ref<number | null>(null);
 const episodes = ref<Episode[]>([]);
 const selectedEpisode = ref<Episode | null>(null);
 
+const baseUrl = 'https://vidsrc.xyz/embed/tv/';
+const embedUrl = ref<string>('');
+
 const posterUrl = computed(() =>
   show.value?.poster_path
     ? `https://image.tmdb.org/t/p/w500${show.value.poster_path}`
@@ -128,10 +138,6 @@ const bgStyle = computed(() => ({
     : 'none',
 }));
 
-const goBack = () => {
-  router.back();
-};
-
 const load = async () => {
   const idParam = route.params.id as string;
   const id = Number(idParam);
@@ -141,9 +147,8 @@ const load = async () => {
   }
   state.value = 'loading';
   try {
-    const res = await fetch(`/api/tv/${id}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    show.value = await res.json();
+    const { getHttpClient } = await import('@vidsrc-wrapper/data');
+    show.value = await getHttpClient().getJson(`/api/tv/${id}`);
     // pick first season with episodes by default
     const urlSeason = Number(route.query.season as string);
     const hasUrlSeason = Number.isFinite(urlSeason) && urlSeason > 0;
@@ -167,6 +172,9 @@ const load = async () => {
       const match = episodes.value.find(e => e.episode_number === urlEpisode);
       if (match) selectedEpisode.value = match;
     }
+    if (selectedSeason.value && selectedEpisode.value) {
+      embedUrl.value = `${baseUrl}${id}/${selectedSeason.value}-${selectedEpisode.value.episode_number}`;
+    }
     state.value = 'loaded';
   } catch (e) {
     // eslint-disable-next-line no-console
@@ -176,9 +184,10 @@ const load = async () => {
 };
 
 async function fetchEpisodes(id: number, seasonNumber: number) {
-  const r = await fetch(`/api/tv/${id}/season/${seasonNumber}`);
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  episodes.value = await r.json();
+  const { getHttpClient } = await import('@vidsrc-wrapper/data');
+  episodes.value = await getHttpClient().getJson(
+    `/api/tv/${id}/season/${seasonNumber}`
+  );
   selectedEpisode.value = null;
 }
 
@@ -389,6 +398,24 @@ watch(
 .hero {
   z-index: 0;
 }
+.player-wrapper {
+  position: relative;
+  margin-top: 1rem;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 */
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+.player {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+}
+
 @media (max-width: 768px) {
   .card {
     grid-template-columns: 1fr;

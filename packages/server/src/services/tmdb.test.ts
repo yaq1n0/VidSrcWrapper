@@ -1,22 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { MockHttpClient, setHttpClient } from '@vidsrc-wrapper/data';
 import { TMDBService } from './tmdb.js';
-
-const originalFetch = global.fetch;
 
 describe('TMDBService', () => {
   beforeEach(() => {
     vi.stubEnv('VITEST', 'true');
   });
 
-  afterEach(() => {
-    global.fetch = originalFetch as typeof global.fetch;
-    vi.restoreAllMocks();
-  });
-
   it('searchMovies returns mapped results', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
+    const mock = new MockHttpClient().on(
+      'https://api.themoviedb.org/3/search/movie?query=test&page=1&include_adult=false',
+      {
         page: 1,
         results: [
           {
@@ -38,22 +32,19 @@ describe('TMDBService', () => {
         ],
         total_pages: 1,
         total_results: 1,
-      }),
-      headers: new Map(),
-      status: 200,
-      statusText: 'OK',
-      text: async () => '',
-    });
+      }
+    );
+    setHttpClient(mock);
 
-    const service = new TMDBService();
+    const service = new TMDBService(mock);
     const res = await service.searchMovies('test', 1);
     expect(res.results[0].title).toBe('Movie');
   });
 
   it('getMovieById maps genre_ids (details response)', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
+    const mock = new MockHttpClient().on(
+      'https://api.themoviedb.org/3/movie/42',
+      {
         id: 42,
         title: 'X',
         original_title: 'X',
@@ -68,22 +59,19 @@ describe('TMDBService', () => {
         original_language: 'en',
         video: false,
         genre_ids: [5],
-      }),
-      headers: new Map(),
-      status: 200,
-      statusText: 'OK',
-      text: async () => '',
-    });
+      }
+    );
+    setHttpClient(mock);
 
-    const service = new TMDBService();
+    const service = new TMDBService(mock);
     const movie = await service.getMovieById(42);
     expect(movie.genre_ids).toEqual([5]);
   });
 
   it('searchShows returns mapped results', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
+    const mock = new MockHttpClient().on(
+      'https://api.themoviedb.org/3/search/tv?query=test&page=1&include_adult=false',
+      {
         page: 1,
         results: [
           {
@@ -103,62 +91,53 @@ describe('TMDBService', () => {
         ],
         total_pages: 1,
         total_results: 1,
-      }),
-      headers: new Map(),
-      status: 200,
-      statusText: 'OK',
-      text: async () => '',
-    });
+      }
+    );
+    setHttpClient(mock);
 
-    const service = new TMDBService();
+    const service = new TMDBService(mock);
     const res = await service.searchShows('test', 1);
     expect(res.results[0].name).toBe('Breaking Bad');
   });
 
   it('getShowById returns seasons', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        id: 20,
-        name: 'Show',
-        original_name: 'Show',
-        overview: '',
-        first_air_date: '2010-01-01',
-        poster_path: null,
-        backdrop_path: null,
-        vote_average: 8,
-        vote_count: 1,
-        popularity: 1,
-        original_language: 'en',
-        genres: [{ id: 1, name: 'Drama' }],
-        number_of_seasons: 1,
-        number_of_episodes: 2,
-        seasons: [
-          {
-            season_number: 1,
-            name: 'S1',
-            episode_count: 2,
-            air_date: '2010-01-01',
-            poster_path: null,
-          },
-        ],
-      }),
-      headers: new Map(),
-      status: 200,
-      statusText: 'OK',
-      text: async () => '',
+    const mock = new MockHttpClient().on('https://api.themoviedb.org/3/tv/20', {
+      id: 20,
+      name: 'Show',
+      original_name: 'Show',
+      overview: '',
+      first_air_date: '2010-01-01',
+      poster_path: null,
+      backdrop_path: null,
+      vote_average: 8,
+      vote_count: 1,
+      popularity: 1,
+      original_language: 'en',
+      genres: [{ id: 1, name: 'Drama' }],
+      number_of_seasons: 1,
+      number_of_episodes: 2,
+      seasons: [
+        {
+          season_number: 1,
+          name: 'S1',
+          episode_count: 2,
+          air_date: '2010-01-01',
+          poster_path: null,
+        },
+      ],
     });
+    setHttpClient(mock);
 
-    const service = new TMDBService();
+    const service = new TMDBService(mock);
     const show = await service.getShowById(20);
     expect(show.seasons.length).toBe(1);
     expect(show.genre_ids).toEqual([1]);
   });
 
   it('getSeasonEpisodes maps episodes', async () => {
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
+    const mock = new MockHttpClient().on(
+      'https://api.themoviedb.org/3/tv/20/season/1',
+      {
         id: 1,
         season_number: 1,
         episodes: [
@@ -173,14 +152,11 @@ describe('TMDBService', () => {
             vote_average: 8,
           },
         ],
-      }),
-      headers: new Map(),
-      status: 200,
-      statusText: 'OK',
-      text: async () => '',
-    });
+      }
+    );
+    setHttpClient(mock);
 
-    const service = new TMDBService();
+    const service = new TMDBService(mock);
     const eps = await service.getSeasonEpisodes(20, 1);
     expect(eps[0].episode_number).toBe(1);
   });
