@@ -61,6 +61,33 @@ app.get('/api/movies', async c => {
   }
 });
 
+// Movie details endpoint
+app.get('/api/movies/:id', async c => {
+  try {
+    const idParam = c.req.param('id');
+    const movieId = parseInt(idParam, 10);
+
+    if (Number.isNaN(movieId) || movieId <= 0) {
+      const error: APIError = {
+        error: 'Invalid id parameter',
+        message: 'Movie id must be a positive integer',
+      };
+      return c.json(error, 400);
+    }
+
+    const movie = await tmdbService.getMovieById(movieId);
+    return c.json(movie);
+  } catch (error) {
+    console.error('Error in /api/movies/:id:', error);
+    const apiError: APIError = {
+      error: 'Internal server error',
+      message:
+        error instanceof Error ? error.message : 'Unknown error occurred',
+    };
+    return c.json(apiError, 500);
+  }
+});
+
 // Start server
 const port = CONFIG.PORT;
 console.log(`🚀 Server starting on port ${port}`);

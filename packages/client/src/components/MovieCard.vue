@@ -1,5 +1,11 @@
 <template>
-  <div class="movie-card">
+  <div
+    class="movie-card"
+    @click="goToDetail"
+    role="button"
+    tabindex="0"
+    @keydown.enter="goToDetail"
+  >
     <div class="poster-container">
       <img
         v-if="movie.poster_path"
@@ -37,6 +43,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import type { Movie } from '@vidsrc-wrapper/data';
 
 const props = defineProps<{
@@ -44,6 +51,7 @@ const props = defineProps<{
 }>();
 
 const imageError = ref(false);
+const router = useRouter();
 
 const posterUrl = computed(() => {
   if (!props.movie.poster_path || imageError.value) return '';
@@ -59,6 +67,10 @@ const truncatedOverview = computed(() => {
 
 const handleImageError = () => {
   imageError.value = true;
+};
+
+const goToDetail = () => {
+  router.push({ name: 'movie-detail', params: { id: props.movie.id } });
 };
 </script>
 
@@ -77,6 +89,10 @@ const handleImageError = () => {
 .movie-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.movie-card {
+  cursor: pointer;
 }
 
 .poster-container {

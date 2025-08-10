@@ -9,7 +9,7 @@
       <p>🎬 Start typing to search for movies</p>
     </div>
 
-    <div v-else class="results">
+    <div v-else class="results" aria-live="polite">
       <p class="results-count">Found {{ movies.length }} movies</p>
       <div class="movies-grid">
         <MovieCard v-for="movie in movies" :key="movie.id" :movie="movie" />

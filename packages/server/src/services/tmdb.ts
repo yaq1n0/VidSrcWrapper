@@ -1,5 +1,12 @@
-import type { Movie, SearchResponse } from '@vidsrc-wrapper/data';
-import { validateTMDBSearchResponse } from '@vidsrc-wrapper/data';
+import type {
+  Movie,
+  SearchResponse,
+  TMDBMovieResponse,
+} from '@vidsrc-wrapper/data';
+import {
+  validateTMDBSearchResponse,
+  validateTMDBMovieResponse,
+} from '@vidsrc-wrapper/data';
 import { CONFIG } from '../config.js';
 
 export class TMDBService {
@@ -101,6 +108,54 @@ export class TMDBService {
     } catch (error) {
       console.error('Error searching movies:', error);
       throw new Error('Failed to search movies');
+    }
+  }
+
+  async getMovieById(movieId: number): Promise<Movie> {
+    try {
+      const data = await this.fetchFromTMDB<TMDBMovieResponse>(
+        `/movie/${movieId}`,
+        {},
+        validateTMDBMovieResponse
+      );
+
+      // TMDB details endpoint returns `genres` as array of objects, while search returns `genre_ids`.
+      // Our shared `Movie` type expects `genre_ids: number[]`.
+      const dataWithOptionalFields: {
+        genre_ids?: number[];
+        genres?: Array<{ id: number; name: string }>;
+      } = data as unknown as {
+        genre_ids?: number[];
+        genres?: Array<{ id: number; name: string }>;
+      };
+
+      const genreIds: number[] = Array.isArray(dataWithOptionalFields.genre_ids)
+        ? dataWithOptionalFields.genre_ids || []
+        : Array.isArray(dataWithOptionalFields.genres)
+          ? dataWithOptionalFields.genres.map((g: { id: number }) => g.id)
+          : [];
+
+      const movie: Movie = {
+        id: data.id,
+        title: data.title,
+        overview: data.overview || '',
+        release_date: data.release_date || '',
+        poster_path: data.poster_path,
+        backdrop_path: data.backdrop_path,
+        vote_average: data.vote_average || 0,
+        vote_count: data.vote_count || 0,
+        popularity: data.popularity || 0,
+        genre_ids: genreIds,
+        adult: data.adult || false,
+        original_language: data.original_language || '',
+        original_title: data.original_title || data.title,
+        video: data.video || false,
+      };
+
+      return movie;
+    } catch (error) {
+      console.error(`Error fetching movie by id ${movieId}:`, error);
+      throw new Error('Failed to fetch movie details');
     }
   }
 }
