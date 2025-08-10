@@ -45,12 +45,62 @@ This starts:
 - Backend at `http://localhost:3001`
 - Frontend at `http://localhost:5173`
 
-## Production
+## Docker (production)
+
+This repository includes a production-ready Docker setup that serves the Vue client via Nginx on port 80 and proxies `/api/*` requests to the Node/Hono server running inside the same container on `127.0.0.1:3001`.
+
+### Files
+
+- `Dockerfile` (Node 22, multi-stage build)
+- `nginx.conf` (serves SPA, proxies `/api/*`)
+- `docker-entrypoint.sh` (starts API, then Nginx)
+
+### Prerequisites
+
+- Docker installed on the host
+- TMDB Read Access Token (Bearer) as `TMDB_API_KEY` (never bake it into the image)
+
+### Build the image
 
 ```bash
-npm run build  # Build all packages
-npm start      # Start production server
+npm run docker:build
 ```
+
+### Run the container
+
+Use this is you want to read from .env
+
+```bash
+npm run docker:run:env
+```
+
+Use this is you want to manually export TMDB_API_KEY beforehand (useful for production use cases)
+
+```bash
+npm run docker:run
+```
+
+### Domains and networking
+
+- Point your domain’s A record to the host’s public IP
+- Ensure host firewall allows inbound TCP 80
+- If using a non-standard host port (e.g., `-p 8080:80`), include it in your URL
+
+### HTTPS (recommended)
+
+Terminate TLS at the host using a reverse proxy (simple options):
+
+- Caddy (automatic Let’s Encrypt) → proxy to `127.0.0.1:80`
+- Traefik (Docker-aware)
+- Nginx with Certbot
+
+This container intentionally serves HTTP only to keep it portable; TLS is best handled by the host or a load balancer.
+
+### How it works
+
+- Nginx serves the built SPA from `packages/client/dist`
+- Requests to `/api/*` are proxied to the Node server on `127.0.0.1:3001`
+- `TMDB_API_KEY` must be provided at runtime; it is not included in the image (obviously)
 
 ## Development Commands
 

@@ -26,7 +26,11 @@
     "lint:fix": "eslint \"packages/**/*.{ts,js,vue}\" --fix",
     "lint:data": "eslint \"packages/data/**/*.{ts,js}\"",
     "lint:server": "eslint \"packages/server/**/*.{ts,js}\"",
-    "lint:client": "eslint \"packages/client/**/*.{vue,ts,js}\""
+    "lint:client": "eslint \"packages/client/**/*.{vue,ts,js}\"",
+    "docker:build": "docker build -t vidsrc-wrapper:latest .",
+    "docker:run": "docker run -d --name vidsrc --restart unless-stopped -p 8080:80 -e TMDB_API_KEY=$TMDB_API_KEY vidsrc-wrapper:latest",
+    "docker:run:env": "docker run -d --name vidsrc --restart unless-stopped -p 8080:80 --env-file .env vidsrc-wrapper:latest",
+    "docker:stop": "docker rm -f vidsrc || true"
   },
   "devDependencies": {
     "@types/node": "^24.2.1",
