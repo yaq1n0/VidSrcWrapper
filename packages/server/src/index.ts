@@ -3,7 +3,6 @@ import { cors } from 'hono/cors';
 import { serve } from '@hono/node-server';
 import { TMDBService } from './services/tmdb.js';
 import { createHandlers } from './handlers/handlers.js';
-import type { StatusCode } from 'hono/utils/http-status';
 import { CONFIG } from './config.js';
 
 const app = new Hono();
@@ -31,7 +30,7 @@ app.get('/api/movies', async context => {
   const query = context.req.query('query');
   const page = parseInt(context.req.query('page') || '1');
   const result = await handlers.searchMovies({ query, page });
-  context.status(result.status as StatusCode);
+  context.status(result.status);
   return context.json(result.body);
 });
 
@@ -40,7 +39,7 @@ app.get('/api/movies/:id', async context => {
   const idParam = context.req.param('id');
   const movieId = parseInt(idParam, 10);
   const result = await handlers.getMovieById({ id: movieId });
-  context.status(result.status as StatusCode);
+  context.status(result.status);
   return context.json(result.body);
 });
 
@@ -49,7 +48,7 @@ app.get('/api/tv', async context => {
   const query = context.req.query('query');
   const page = parseInt(context.req.query('page') || '1');
   const result = await handlers.searchShows({ query, page });
-  context.status(result.status as StatusCode);
+  context.status(result.status);
   return context.json(result.body);
 });
 
@@ -58,7 +57,7 @@ app.get('/api/tv/:id', async context => {
   const idParam = context.req.param('id');
   const showId = parseInt(idParam, 10);
   const result = await handlers.getShowById({ id: showId });
-  context.status(result.status as StatusCode);
+  context.status(result.status);
   return context.json(result.body);
 });
 
@@ -69,7 +68,7 @@ app.get('/api/tv/:id/season/:seasonNumber', async context => {
   const showId = parseInt(idParam, 10);
   const seasonNumber = parseInt(seasonParam, 10);
   const result = await handlers.getSeasonEpisodes({ id: showId, seasonNumber });
-  context.status(result.status as StatusCode);
+  context.status(result.status);
   return context.json(result.body);
 });
 

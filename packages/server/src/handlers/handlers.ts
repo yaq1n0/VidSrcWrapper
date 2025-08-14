@@ -6,9 +6,10 @@ import type {
   Episode,
 } from '@vidsrc-wrapper/data';
 import type { TMDBService } from '../services/tmdb.js';
+import { StatusCode } from 'hono/utils/http-status.js';
 
 export interface HandlerResult<T> {
-  status: number;
+  status: StatusCode;
   body: T | APIError;
 }
 
