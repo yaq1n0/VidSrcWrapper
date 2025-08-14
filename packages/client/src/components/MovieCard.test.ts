@@ -1,65 +1,117 @@
-import { mount } from '@vue/test-utils';
 import { createRouter, createMemoryHistory } from 'vue-router';
 import MovieCard from './MovieCard.vue';
-import ShowCard from './ShowCard.vue';
 import type { Movie } from '@vidsrc-wrapper/data';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { screen, render } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 
-function makeMovie(overrides: Partial<Movie> = {}): Movie {
-  return {
-    id: 1,
-    title: 'Inception',
-    overview: 'A mind-bending thriller',
-    release_date: '2010-07-16',
-    poster_path: null,
-    backdrop_path: null,
-    vote_average: 8.7,
-    vote_count: 1000,
-    popularity: 99,
-    genre_ids: [28, 878],
-    adult: false,
-    original_language: 'en',
-    original_title: 'Inception',
-    video: false,
-    ...overrides,
-  };
-}
-
-describe('MovieCard', () => {
-  it('renders title and rating', () => {
-    const router = createRouter({ history: createMemoryHistory(), routes: [] });
-    const wrapper = mount(MovieCard, {
-      props: { movie: makeMovie() },
-      global: { plugins: [router] },
-    });
-    expect(wrapper.text()).toContain('Inception');
-    expect(wrapper.text()).toContain('⭐ 8.7');
-  });
+const TestMovie: Movie = {
+  id: 1,
+  title: 'Inception',
+  overview: 'A mind-bending thriller',
+  release_date: '2010-07-16',
+  poster_path: null,
+  backdrop_path: null,
+  vote_average: 8.7,
+  vote_count: 1000,
+  popularity: 99,
+  genre_ids: [28, 878],
+  adult: false,
+  original_language: 'en',
+  original_title: 'Inception',
+  video: false,
+};
+const createMovie = (overrides: Partial<Movie> = {}): Movie => ({
+  ...TestMovie,
+  ...overrides,
 });
 
-describe('ShowCard', () => {
-  it('renders show name and rating', async () => {
+describe('MovieCard', () => {
+  it('displays movie information to user', () => {
     const router = createRouter({ history: createMemoryHistory(), routes: [] });
-    const wrapper = mount(ShowCard, {
-      props: {
-        show: {
-          id: 1,
-          name: 'Breaking Bad',
-          overview: 'desc',
-          first_air_date: '2008-01-20',
-          poster_path: null,
-          backdrop_path: null,
-          vote_average: 9.5,
-          vote_count: 100,
-          popularity: 100,
-          genre_ids: [18],
-          original_language: 'en',
-          original_name: 'Breaking Bad',
-        },
-      },
+    const movie = createMovie({
+      title: 'Inception',
+      vote_average: 8.7,
+      release_date: '2010-07-16',
+      overview: 'A mind-bending thriller',
+    });
+
+    render(MovieCard, {
+      props: { movie },
       global: { plugins: [router] },
     });
-    expect(wrapper.text()).toContain('Breaking Bad');
-    expect(wrapper.text()).toContain('⭐ 9.5');
+
+    // User should see the movie title, rating, year, and overview
+    expect(screen.getByText('Inception')).toBeVisible();
+    expect(screen.getByText('⭐ 8.7')).toBeVisible();
+    expect(screen.getByText('2010')).toBeVisible();
+    expect(screen.getByText('A mind-bending thriller')).toBeVisible();
+  });
+
+  it('shows fallback when movie has no overview', () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const movie = createMovie({ overview: '' });
+
+    render(MovieCard, {
+      props: { movie },
+      global: { plugins: [router] },
+    });
+
+    expect(screen.getByText('No description available')).toBeVisible();
+  });
+
+  it('truncates long overviews for readability', () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const longOverview = 'A'.repeat(200);
+    const movie = createMovie({ overview: longOverview });
+
+    render(MovieCard, {
+      props: { movie },
+      global: { plugins: [router] },
+    });
+
+    // User should see truncated overview with ellipsis
+    expect(screen.getByText(/\.\.\./)).toBeVisible();
+  });
+
+  it('allows user to navigate to movie details', async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const push = vi.fn();
+    router.push = push;
+    const user = userEvent.setup();
+
+    const { container } = render(MovieCard, {
+      props: { movie: createMovie({ id: 123, title: 'Test Movie' }) },
+      global: { plugins: [router] },
+    });
+
+    // User can click the card to navigate
+    const movieCard = container.querySelector('.movie-card');
+    await user.click(movieCard!);
+    expect(push).toHaveBeenCalledWith({
+      name: 'movie-detail',
+      params: { id: 123 },
+    });
+  });
+
+  it('supports keyboard navigation', async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const push = vi.fn();
+    router.push = push;
+    const user = userEvent.setup();
+
+    const { container } = render(MovieCard, {
+      props: { movie: createMovie({ id: 456, title: 'Test Movie' }) },
+      global: { plugins: [router] },
+    });
+
+    // User can use Enter key to navigate
+    const movieCard = container.querySelector('.movie-card') as HTMLElement;
+    movieCard?.focus();
+    await user.keyboard('{Enter}');
+    expect(push).toHaveBeenCalledWith({
+      name: 'movie-detail',
+      params: { id: 456 },
+    });
   });
 });
