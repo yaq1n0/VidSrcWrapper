@@ -10,6 +10,7 @@ const __dirname = dirname(__filename);
 config({ path: join(__dirname, '../../../.env') });
 
 export type ServerConfig = {
+  ENV: 'dev' | 'prod' | 'test';
   PORT: number;
   /**
    * TMDB API Key
@@ -21,20 +22,20 @@ export type ServerConfig = {
   TMDB_IMAGE_BASE_URL: string;
 };
 
+let env: ServerConfig['ENV'] = 'prod';
+if (process.env.ENV === 'test' || process.env.VITEST === 'true') env = 'test';
+// if we implement a way to set dev, then we can add a conditional here
+
 export const CONFIG: ServerConfig = {
+  ENV: env,
   PORT: parseInt(process.env.PORT || '3001'),
   TMDB_API_KEY: process.env.TMDB_API_KEY || '',
   TMDB_BASE_URL: 'https://api.themoviedb.org/3',
   TMDB_IMAGE_BASE_URL: 'https://image.tmdb.org/t/p/w500',
 };
 
-// Validate required environment variables
-// During tests, avoid hard exiting to allow unit tests to mock network calls
-const isTestEnv =
-  process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
-
 // if you don't have a TMDB_API_KEY and you aren't testing, then throw an error and exit.
-if (!CONFIG.TMDB_API_KEY && !isTestEnv) {
+if (!CONFIG.TMDB_API_KEY && CONFIG.ENV !== 'test') {
   console.error('Error: TMDB_API_KEY environment variable is required');
   console.error(
     'Please set your TMDB Read Access Token (not API v3 key) in the .env file'
