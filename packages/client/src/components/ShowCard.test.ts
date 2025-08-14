@@ -1,33 +1,12 @@
-import { createRouter, createMemoryHistory } from 'vue-router';
 import ShowCard from './ShowCard.vue';
-import type { Show } from '@vidsrc-wrapper/data';
 import { describe, it, expect, vi } from 'vitest';
 import { screen, render } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-
-const TestShow: Show = {
-  id: 1,
-  name: 'Breaking Bad',
-  overview: 'A chemistry teacher turns to manufacturing drugs',
-  first_air_date: '2008-01-20',
-  poster_path: null,
-  backdrop_path: null,
-  vote_average: 9.5,
-  vote_count: 100,
-  popularity: 100,
-  genre_ids: [18],
-  original_language: 'en',
-  original_name: 'Breaking Bad',
-};
-
-const createShow = (overrides: Partial<Show> = {}): Show => ({
-  ...TestShow,
-  ...overrides,
-});
+import { createShow, createTestRouter } from '../helpers/TestHelpers';
 
 describe('ShowCard', () => {
   it('displays show information to user', () => {
-    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const router = createTestRouter();
     const show = createShow({
       name: 'Breaking Bad',
       vote_average: 9.5,
@@ -50,7 +29,7 @@ describe('ShowCard', () => {
   });
 
   it('shows fallback when show has no overview', () => {
-    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const router = createTestRouter();
     const show = createShow({ overview: '' });
 
     render(ShowCard, {
@@ -62,7 +41,7 @@ describe('ShowCard', () => {
   });
 
   it('truncates long overviews for readability', () => {
-    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const router = createTestRouter();
     const longOverview = 'A'.repeat(200);
     const show = createShow({ overview: longOverview });
 
@@ -76,7 +55,7 @@ describe('ShowCard', () => {
   });
 
   it('allows user to navigate to show details', async () => {
-    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const router = createTestRouter();
     const push = vi.fn();
     router.push = push;
     const user = userEvent.setup();
@@ -96,7 +75,7 @@ describe('ShowCard', () => {
   });
 
   it('supports keyboard navigation', async () => {
-    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const router = createTestRouter();
     const push = vi.fn();
     router.push = push;
     const user = userEvent.setup();
@@ -117,7 +96,7 @@ describe('ShowCard', () => {
   });
 
   it('shows placeholder when no poster is available', () => {
-    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const router = createTestRouter();
     const show = createShow({ poster_path: null });
 
     render(ShowCard, {

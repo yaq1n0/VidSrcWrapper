@@ -1,27 +1,10 @@
-import { createRouter, createMemoryHistory } from 'vue-router';
 import ShowList from './ShowList.vue';
-import type { Show } from '@vidsrc-wrapper/data';
 import { describe, it, expect } from 'vitest';
 import { screen, render } from '@testing-library/vue';
-
-const createShow = (overrides: Partial<Show> = {}): Show => ({
-  id: 1,
-  name: 'Breaking Bad',
-  overview: 'A chemistry teacher turns to manufacturing drugs',
-  first_air_date: '2008-01-20',
-  poster_path: null,
-  backdrop_path: null,
-  vote_average: 9.5,
-  vote_count: 100,
-  popularity: 100,
-  genre_ids: [18],
-  original_language: 'en',
-  original_name: 'Breaking Bad',
-  ...overrides,
-});
+import { createShow, createTestRouter, testScenarios } from '../helpers/TestHelpers';
 
 describe('ShowList', () => {
-  const router = createRouter({ history: createMemoryHistory(), routes: [] });
+  const router = createTestRouter();
 
   it('shows loading indicator when searching', () => {
     render(ShowList, {
@@ -35,9 +18,9 @@ describe('ShowList', () => {
 
   it('displays shows with correct count and information', () => {
     const shows = [
-      createShow({ id: 1, name: 'Breaking Bad', vote_average: 9.5 }),
-      createShow({ id: 2, name: 'Better Call Saul', vote_average: 8.8 }),
-      createShow({ id: 3, name: 'The Sopranos', vote_average: 9.2 }),
+      testScenarios.shows.breakingBad,
+      testScenarios.shows.betterCallSaul,
+      testScenarios.shows.theSopranos,
     ];
 
     render(ShowList, {

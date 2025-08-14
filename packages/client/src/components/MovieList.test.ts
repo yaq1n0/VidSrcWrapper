@@ -1,29 +1,10 @@
-import { createRouter, createMemoryHistory } from 'vue-router';
 import MovieList from './MovieList.vue';
-import type { Movie } from '@vidsrc-wrapper/data';
 import { describe, it, expect } from 'vitest';
 import { screen, render } from '@testing-library/vue';
-
-const createMovie = (overrides: Partial<Movie> = {}): Movie => ({
-  id: 1,
-  title: 'Inception',
-  overview: 'A mind-bending thriller',
-  release_date: '2010-07-16',
-  poster_path: null,
-  backdrop_path: null,
-  vote_average: 8.7,
-  vote_count: 1000,
-  popularity: 99,
-  genre_ids: [28, 878],
-  adult: false,
-  original_language: 'en',
-  original_title: 'Inception',
-  video: false,
-  ...overrides,
-});
+import { createMovie, createTestRouter } from '../helpers/TestHelpers';
 
 describe('MovieList', () => {
-  const router = createRouter({ history: createMemoryHistory(), routes: [] });
+  const router = createTestRouter();
 
   it('shows loading indicator when searching', () => {
     render(MovieList, {

@@ -1,34 +1,12 @@
-import { createRouter, createMemoryHistory } from 'vue-router';
 import MovieCard from './MovieCard.vue';
-import type { Movie } from '@vidsrc-wrapper/data';
 import { describe, it, expect, vi } from 'vitest';
 import { screen, render } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-
-const TestMovie: Movie = {
-  id: 1,
-  title: 'Inception',
-  overview: 'A mind-bending thriller',
-  release_date: '2010-07-16',
-  poster_path: null,
-  backdrop_path: null,
-  vote_average: 8.7,
-  vote_count: 1000,
-  popularity: 99,
-  genre_ids: [28, 878],
-  adult: false,
-  original_language: 'en',
-  original_title: 'Inception',
-  video: false,
-};
-const createMovie = (overrides: Partial<Movie> = {}): Movie => ({
-  ...TestMovie,
-  ...overrides,
-});
+import { createMovie, createTestRouter } from '../helpers/TestHelpers';
 
 describe('MovieCard', () => {
   it('displays movie information to user', () => {
-    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const router = createTestRouter();
     const movie = createMovie({
       title: 'Inception',
       vote_average: 8.7,
@@ -36,7 +14,7 @@ describe('MovieCard', () => {
       overview: 'A mind-bending thriller',
     });
 
-    render(MovieCard, {
+    const { container } = render(MovieCard, {
       props: { movie },
       global: { plugins: [router] },
     });
@@ -49,7 +27,7 @@ describe('MovieCard', () => {
   });
 
   it('shows fallback when movie has no overview', () => {
-    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const router = createTestRouter();
     const movie = createMovie({ overview: '' });
 
     render(MovieCard, {
@@ -61,7 +39,7 @@ describe('MovieCard', () => {
   });
 
   it('truncates long overviews for readability', () => {
-    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const router = createTestRouter();
     const longOverview = 'A'.repeat(200);
     const movie = createMovie({ overview: longOverview });
 
@@ -75,7 +53,7 @@ describe('MovieCard', () => {
   });
 
   it('allows user to navigate to movie details', async () => {
-    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const router = createTestRouter();
     const push = vi.fn();
     router.push = push;
     const user = userEvent.setup();
@@ -95,7 +73,7 @@ describe('MovieCard', () => {
   });
 
   it('supports keyboard navigation', async () => {
-    const router = createRouter({ history: createMemoryHistory(), routes: [] });
+    const router = createTestRouter();
     const push = vi.fn();
     router.push = push;
     const user = userEvent.setup();
