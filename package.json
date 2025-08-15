@@ -28,6 +28,7 @@
     "lint:server": "eslint \"packages/server/**/*.{ts,js}\"",
     "lint:client": "eslint \"packages/client/**/*.{vue,ts,js}\"",
     "test": "npm run build:data && concurrently -k -s first -n data,server,client -c blue,magenta,green \"npm run test --workspace=@vidsrc-wrapper/data\" \"npm run test --workspace=@vidsrc-wrapper/server\" \"npm run test --workspace=@vidsrc-wrapper/client\"",
+    "test:coverage": "npm run build:data && concurrently -k -s first -n data,server,client -c blue,magenta,green \"npm run test:coverage --workspace=@vidsrc-wrapper/data\" \"npm run test:coverage --workspace=@vidsrc-wrapper/server\" \"npm run test:coverage --workspace=@vidsrc-wrapper/client\"",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "docker:build": "docker build -t vidsrc-wrapper:latest .",
