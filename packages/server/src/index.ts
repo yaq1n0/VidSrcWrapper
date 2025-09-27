@@ -12,7 +12,7 @@ const tmdbService = new TMDBService();
 app.use(
   '/*',
   cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000'], // Add your frontend URLs (TODO: I don't think this will work if I deploy this in prod/over internet)
+    origin: ['http://localhost:3000'], // Add your frontend URLs (TODO: I don't think this will work if I deploy this in prod/over internet)
     allowMethods: ['GET', 'OPTIONS'],
     allowHeaders: ['Content-Type'],
   })

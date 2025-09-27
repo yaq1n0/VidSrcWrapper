@@ -4,5 +4,3 @@ dist
 test-results
 
 packages/*/coverage
-
-*.tsbuildinfo

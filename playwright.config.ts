@@ -8,13 +8,13 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 60_000,
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:3000',
     trace: 'retain-on-failure',
   },
   webServer: [
     {
       command: 'npm run dev --workspace=@vidsrc-wrapper/server',
-      port: 3001,
+      port: 8080,
       reuseExistingServer: true,
       env: {
         TMDB_API_KEY: process.env.TMDB_API_KEY || '',
@@ -24,7 +24,7 @@ export default defineConfig({
     },
     {
       command: 'npm run dev --workspace=@vidsrc-wrapper/client',
-      port: 5173,
+      port: 3000,
       reuseExistingServer: true,
       stdout: 'pipe',
       stderr: 'pipe',

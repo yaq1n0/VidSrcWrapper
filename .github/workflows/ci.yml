@@ -1,4 +1,4 @@
-name: Integration Tests
+name: Continuous Integration
 
 on:
   push:
@@ -11,7 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -23,16 +23,19 @@ jobs:
       # - name: Type check
       #   run: npm run type-check
 
-      - name: Unit tests with coverage
+      - name: Run vitest unit tests with coverage
         run: npm run test:coverage
 
-      - name: Lint code
-        run: npm run lint
+      - name: Install playwright browsers
+        run: npm run e2e:install
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
-
-      - name: E2E tests
+      - name: Run e2e tests
         env:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
         run: npm run e2e
+
+      - name: Check linting
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run prettier

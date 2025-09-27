@@ -30,8 +30,8 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-# The Node server listens on 3001; Nginx serves on 80
-ENV PORT=3001
+# The Node server listens on 8080; Nginx serves on 80
+ENV PORT=8080
 EXPOSE 80
 
 CMD ["/docker-entrypoint.sh"]

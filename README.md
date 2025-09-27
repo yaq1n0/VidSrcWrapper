@@ -42,12 +42,12 @@ npm run dev
 
 This starts:
 
-- Backend at `http://localhost:3001`
-- Frontend at `http://localhost:5173`
+- Backend at `http://localhost:8080`
+- Frontend at `http://localhost:3000`
 
 ## Docker (production)
 
-This repository includes a production-ready Docker setup that serves the Vue client via Nginx on port 80 and proxies `/api/*` requests to the Node/Hono server running inside the same container on `127.0.0.1:3001`.
+This repository includes a production-ready Docker setup that serves the Vue client via Nginx on port 80 and proxies `/api/*` requests to the Node/Hono server running inside the same container on `127.0.0.1:8080`.
 
 ### Files
 
@@ -99,7 +99,7 @@ This container intentionally serves HTTP only to keep it portable; TLS is best h
 ### How it works
 
 - Nginx serves the built SPA from `packages/client/dist`
-- Requests to `/api/*` are proxied to the Node server on `127.0.0.1:3001`
+- Requests to `/api/*` are proxied to the Node server on `127.0.0.1:8080`
 - `TMDB_API_KEY` must be provided at runtime; it is not included in the image (obviously)
 
 ## Development Commands

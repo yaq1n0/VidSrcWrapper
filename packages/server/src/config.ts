@@ -28,7 +28,7 @@ if (process.env.ENV === 'test' || process.env.VITEST === 'true') env = 'test';
 
 export const CONFIG: ServerConfig = {
   ENV: env,
-  PORT: parseInt(process.env.PORT || '3001'),
+  PORT: parseInt(process.env.PORT || '8080'),
   TMDB_API_KEY: process.env.TMDB_API_KEY || '',
   TMDB_BASE_URL: 'https://api.themoviedb.org/3',
   TMDB_IMAGE_BASE_URL: 'https://image.tmdb.org/t/p/w500',

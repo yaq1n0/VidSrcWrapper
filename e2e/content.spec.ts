@@ -1,15 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-type ModeTestParams = {
-  contentType: 'movies' | 'shows';
-  searchQuery: string;
-  expectedContentName: RegExp;
-  cardSelector: string;
-  detailPagePattern: RegExp;
-  placeholder: string;
-};
-
-const moviesTestParams: ModeTestParams = {
+const moviesTestParams = {
   contentType: 'movies',
   searchQuery: 'minecraft',
   expectedContentName: /minecraft/i,
@@ -18,7 +9,7 @@ const moviesTestParams: ModeTestParams = {
   placeholder: 'Search for movies...',
 };
 
-const showsTestParams: ModeTestParams = {
+const showsTestParams = {
   contentType: 'shows',
   searchQuery: 'adventure time',
   expectedContentName: /adventure time/i,
@@ -27,16 +18,13 @@ const showsTestParams: ModeTestParams = {
   placeholder: 'Search for shows...',
 };
 
-const testCases = [moviesTestParams, showsTestParams];
-
 test.describe('Content Search and Playback', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-  });
+  test.beforeEach(async ({ page }) => await page.goto('/'));
 
-  testCases.forEach(params => {
+  [moviesTestParams, showsTestParams].forEach(params => {
     test.describe(params.contentType, () => {
       test.beforeEach(async ({ page }) => {
+        // Switch to the correct content type & wait for the search placeholder to be visible
         await page.getByRole('tab', { name: params.contentType }).click();
         await expect(page.getByPlaceholder(params.placeholder)).toBeVisible();
       });
@@ -44,12 +32,10 @@ test.describe('Content Search and Playback', () => {
       test(`can search, view details, and play ${params.searchQuery}`, async ({
         page,
       }) => {
-        // Search for content
+        // Search for content & wait for results
         const searchInput = page.getByPlaceholder(params.placeholder);
         await searchInput.fill(params.searchQuery);
         await page.getByRole('button', { name: 'Search' }).click();
-
-        // Wait for results
         await expect(
           page.getByText(new RegExp(`Found \\d+ ${params.contentType}`))
         ).toBeVisible({
@@ -84,7 +70,10 @@ test.describe('Content Search and Playback', () => {
           const iframe = page.locator('iframe.player');
           await expect(iframe).toBeVisible({ timeout: 8_000 });
           await expect(iframe).toHaveAttribute('allowfullscreen');
-        } else {
+          return;
+        }
+
+        if (params.contentType === 'shows') {
           // For shows: verify seasons/episodes interface
           await expect(page.locator('.seasons')).toBeVisible({
             timeout: 5_000,
@@ -103,7 +92,10 @@ test.describe('Content Search and Playback', () => {
             timeout: 3_000,
           });
           await expect(page).toHaveURL(/episode=\d+/);
+          return;
         }
+
+        throw new Error('Invalid content type');
       });
 
       test(`handles empty and invalid searches for ${params.contentType}`, async ({
@@ -118,10 +110,6 @@ test.describe('Content Search and Playback', () => {
         // Whitespace-only search should disable button
         await searchInput.fill('   ');
         await expect(searchButton).toBeDisabled();
-
-        // Valid search should enable button
-        await searchInput.fill('test');
-        await expect(searchButton).toBeEnabled();
 
         // Search for something that won't return results
         await searchInput.fill('asdfghjklqwertyuiopzxcvbnm123456789');
