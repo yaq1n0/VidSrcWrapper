@@ -14,7 +14,7 @@ describe('MovieCard', () => {
       overview: 'A mind-bending thriller',
     });
 
-    const { container } = render(MovieCard, {
+    render(MovieCard, {
       props: { movie },
       global: { plugins: [router] },
     });

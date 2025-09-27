@@ -1,11 +1,7 @@
 import ShowList from './ShowList.vue';
 import { describe, it, expect } from 'vitest';
 import { screen, render } from '@testing-library/vue';
-import {
-  createShow,
-  createTestRouter,
-  testScenarios,
-} from '../helpers/TestHelpers';
+import { createTestRouter, testScenarios } from '../helpers/TestHelpers';
 
 describe('ShowList', () => {
   const router = createTestRouter();
