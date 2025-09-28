@@ -19,9 +19,9 @@ app.use(
 );
 
 // Health check endpoint
-app.get('/', c => {
-  return c.json({ message: 'TMDB Search API Server', status: 'healthy' });
-});
+app.get('/', c =>
+  c.json({ message: 'TMDB Search API Server', status: 'healthy' })
+);
 
 const handlers = createHandlers(tmdbService);
 
