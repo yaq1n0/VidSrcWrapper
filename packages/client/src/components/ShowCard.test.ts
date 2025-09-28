@@ -97,7 +97,7 @@ describe('ShowCard', () => {
 
   it('shows placeholder when no poster is available', () => {
     const router = createTestRouter();
-    const show = createShow({ poster_path: null });
+    const show = createShow({ poster_path: '' });
 
     render(ShowCard, {
       props: { show },
