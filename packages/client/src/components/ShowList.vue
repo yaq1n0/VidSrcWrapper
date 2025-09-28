@@ -20,11 +20,11 @@
 </template>
 
 <script setup lang="ts">
-import type { TV as Show } from 'tmdb-ts';
+import type { TV } from 'tmdb-ts';
 import ShowCard from './ShowCard.vue';
 
 defineProps<{
-  shows: Show[];
+  shows: TV[];
   loading: boolean;
 }>();
 </script>

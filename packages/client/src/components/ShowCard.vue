@@ -44,9 +44,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import type { TV as Show } from 'tmdb-ts';
+import type { TV } from 'tmdb-ts';
 
-const props = defineProps<{ show: Show }>();
+const props = defineProps<{ show: TV }>();
 
 const imageError = ref(false);
 const router = useRouter();

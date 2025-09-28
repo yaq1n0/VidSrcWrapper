@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
-import { config as dotenvConfig } from 'dotenv';
+import { config } from 'dotenv';
 import { resolve } from 'path';
 
-dotenvConfig({ path: resolve(process.cwd(), '.env') });
+config({ path: resolve(process.cwd(), '.env') });
 
 export default defineConfig({
   testDir: './e2e',

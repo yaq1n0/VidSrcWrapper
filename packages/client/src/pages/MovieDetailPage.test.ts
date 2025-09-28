@@ -11,7 +11,6 @@ import {
 import { createFetchMock } from '../helpers/FetchMockHelper';
 import type { Movie } from 'tmdb-ts';
 
-// Movie-specific test helpers
 const createMovieRouter = (component: Component) =>
   createRouter({
     history: createMemoryHistory(),
@@ -25,19 +24,14 @@ const createMovieMock = (movieId: number, movieData: Movie) => {
 };
 
 describe('MovieDetailPage', () => {
-  const { beforeEach: setupBeforeEach, afterEach: setupAfterEach } =
-    setupTestEnvironment();
+  const { beforeEachFn, afterEachFn } = setupTestEnvironment();
   let fetchMock: ReturnType<typeof createFetchMock> | undefined;
 
-  beforeEach(() => {
-    setupBeforeEach();
-  });
+  beforeEach(beforeEachFn);
 
   afterEach(() => {
-    setupAfterEach();
-    if (fetchMock) {
-      fetchMock.restore();
-    }
+    afterEachFn();
+    fetchMock?.restore();
   });
 
   it('displays movie information and embeds player correctly', async () => {

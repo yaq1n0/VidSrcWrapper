@@ -3,9 +3,13 @@ import ShowDetailPage from './ShowDetailPage.vue';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createRouter, createMemoryHistory } from 'vue-router';
 import type { Component } from 'vue';
-import { waitForAsync, setupTestEnvironment } from '../helpers/TestHelpers';
+import {
+  waitForAsync,
+  setupTestEnvironment,
+  testScenarios,
+} from '../helpers/TestHelpers';
 import { createFetchMock } from '../helpers/FetchMockHelper';
-import type { TvShowDetails as ShowDetails, SeasonDetails } from 'tmdb-ts';
+import type { TvShowDetails, SeasonDetails } from 'tmdb-ts';
 
 type Episode = NonNullable<SeasonDetails['episodes']>[0];
 
@@ -16,50 +20,9 @@ const createShowRouter = (component: Component) =>
     routes: [{ path: '/tv/:id', component }],
   });
 
-const createShowDetails = (
-  overrides: Partial<ShowDetails> = {}
-): ShowDetails => ({
-  id: 1,
-  name: 'Test Show',
-  original_name: 'Test Show',
-  overview: 'A great test show',
-  first_air_date: '2000-01-01',
-  poster_path: '/test-poster.jpg',
-  backdrop_path: '/test-backdrop.jpg',
-  vote_average: 8.5,
-  vote_count: 100,
-  popularity: 50,
-  genre_ids: [18],
-  original_language: 'en',
-  number_of_seasons: 1,
-  number_of_episodes: 2,
-  seasons: [
-    {
-      season_number: 1,
-      name: 'Season 1',
-      episode_count: 2,
-      air_date: '2000-01-01',
-      poster_path: '/season1-poster.jpg',
-    },
-  ],
-  ...overrides,
-});
-
-const createEpisode = (overrides: Partial<Episode> = {}): Episode => ({
-  id: 10,
-  name: 'Episode 1',
-  overview: 'First episode description',
-  air_date: '2000-01-02',
-  still_path: '/ep1-still.jpg',
-  episode_number: 1,
-  season_number: 1,
-  vote_average: 7.8,
-  ...overrides,
-});
-
 const createShowWithEpisodesMock = (
   showId: number,
-  showData: ShowDetails,
+  showData: TvShowDetails,
   seasonNumber: number,
   episodes: Episode[]
 ) => {
@@ -72,63 +35,15 @@ const createShowWithEpisodesMock = (
   return fetchMock;
 };
 
-// Show-specific test scenarios
-const testScenarios = {
-  showDetails: {
-    testShow: createShowDetails({
-      id: 1,
-      name: 'Test Show',
-      overview: 'A great test show',
-      first_air_date: '2000-01-01',
-      poster_path: '/test-poster.jpg',
-      backdrop_path: '/test-backdrop.jpg',
-      vote_average: 8.5,
-    }),
-    urlTestShow: createShowDetails({
-      id: 1,
-      name: 'URL Test Show',
-      overview: 'Show loaded from URL params',
-      vote_average: 8.2,
-      vote_count: 150,
-      popularity: 75,
-    }),
-  },
-  episodes: {
-    season1: [
-      createEpisode({
-        id: 10,
-        name: 'Episode 1',
-        overview: 'First episode description',
-        episode_number: 1,
-        vote_average: 7.8,
-      }),
-      createEpisode({
-        id: 11,
-        name: 'Episode 2',
-        overview: 'Second episode description',
-        air_date: '2000-01-03',
-        still_path: '/ep2-still.jpg',
-        episode_number: 2,
-        vote_average: 8.1,
-      }),
-    ],
-  },
-};
-
 describe('ShowDetailPage', () => {
-  const { beforeEach: setupBeforeEach, afterEach: setupAfterEach } =
-    setupTestEnvironment();
+  const { beforeEachFn, afterEachFn } = setupTestEnvironment();
   let fetchMock: ReturnType<typeof createFetchMock> | undefined;
 
-  beforeEach(() => {
-    setupBeforeEach();
-  });
+  beforeEach(beforeEachFn);
 
   afterEach(() => {
-    setupAfterEach();
-    if (fetchMock) {
-      fetchMock.restore();
-    }
+    afterEachFn();
+    fetchMock?.restore();
   });
 
   it('displays show information and handles season/episode selection with URL updates', async () => {

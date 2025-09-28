@@ -35,9 +35,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { Movie } from 'tmdb-ts';
+import { getPositiveInteger } from '../helpers/TypeHelpers';
 
 type State = 'idle' | 'loading' | 'loaded' | 'error';
 
@@ -46,7 +47,13 @@ const movie = ref<Movie>();
 const state = ref<State>('idle');
 
 const baseUrl = 'https://vidsrc.xyz/embed/movie/';
-const embedUrl = ref<string>('');
+
+const movieId = computed(() => getPositiveInteger(route.params.id));
+
+// Reactive embed URL that updates automatically
+const embedUrl = computed(() =>
+  movieId.value ? `${baseUrl}${movieId.value}` : ''
+);
 
 const posterUrl = computed(() =>
   movie.value?.poster_path
@@ -60,30 +67,31 @@ const bgStyle = computed(() => ({
     : 'none',
 }));
 
-const load = async () => {
-  const idParam = route.params.id as string;
-  const id = Number(idParam);
-  if (!Number.isFinite(id) || id <= 0) {
-    state.value = 'error';
-    return;
-  }
+const onMovieFetchError = () => {
+  state.value = 'error';
+  movie.value = undefined;
+};
+
+const tryFetchMovie = async (id?: number) => {
+  if (id === undefined) return onMovieFetchError();
+
   state.value = 'loading';
   try {
     const response = await fetch(`/api/movies/${id}`);
-    if (!response.ok) {
+    if (response.ok) {
+      movie.value = await response.json();
+      state.value = 'loaded';
+    } else {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    movie.value = await response.json();
-    embedUrl.value = `${baseUrl}${id}`;
-    state.value = 'loaded';
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error(e);
-    state.value = 'error';
+    onMovieFetchError();
   }
 };
 
-onMounted(load);
+watch(movieId, id => tryFetchMovie(id), { immediate: true });
 </script>
 
 <style scoped>

@@ -87,6 +87,8 @@ export default [
       'no-var': 'error',
       'no-console': 'off',
       'no-unused-vars': 'off', // Use TypeScript version instead
+      'arrow-body-style': ['error', 'as-needed'],
+      'no-useless-return': 'error',
     },
   },
 
@@ -143,6 +145,8 @@ export default [
       'no-var': 'error',
       'no-console': 'warn',
       'no-unused-vars': 'off', // Use TypeScript version instead
+      'arrow-body-style': ['error', 'as-needed'],
+      'no-useless-return': 'error',
       // Vue-specific rules
       'vue/multi-word-component-names': 'off',
     },

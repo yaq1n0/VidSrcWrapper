@@ -37,7 +37,7 @@ export function createHandlers(tmdb: TMDBService) {
     }
     try {
       const res = await tmdb.searchMovies(query, page);
-      return { status: 200, body: res.results as Movie[] };
+      return { status: 200, body: res.results };
     } catch (e) {
       const error: APIError = {
         error: 'Internal server error',
@@ -94,7 +94,7 @@ export function createHandlers(tmdb: TMDBService) {
     }
     try {
       const res = await tmdb.searchShows(query, page);
-      return { status: 200, body: res.results as TV[] };
+      return { status: 200, body: res.results };
     } catch (e) {
       const error: APIError = {
         error: 'Internal server error',

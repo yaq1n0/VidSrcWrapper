@@ -109,24 +109,37 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import type { TvShowDetails as ShowDetails, SeasonDetails } from 'tmdb-ts';
-
-type Episode = NonNullable<SeasonDetails['episodes']>[0];
+import type { TvShowDetails, Episode } from 'tmdb-ts';
+import { getPositiveInteger } from '../helpers/TypeHelpers';
 
 type State = 'idle' | 'loading' | 'loaded' | 'error';
 
 const route = useRoute();
 const router = useRouter();
-const show = ref<ShowDetails>();
+const show = ref<TvShowDetails>();
 const state = ref<State>('idle');
-const selectedSeason = ref<number | null>(null);
 const episodes = ref<Episode[]>([]);
-const selectedEpisode = ref<Episode | null>(null);
+const selectedEpisode = ref<Episode>();
 
 const baseUrl = 'https://vidsrc.xyz/embed/tv/';
-const embedUrl = ref<string>('');
+
+const showId = computed(() => getPositiveInteger(route.params.id));
+const urlSeason = computed(() => getPositiveInteger(route.query.season));
+const urlEpisode = computed(() => getPositiveInteger(route.query.episode));
+
+const selectedSeason = computed(
+  () =>
+    urlSeason.value ||
+    show.value?.seasons?.find(s => s.episode_count > 0)?.season_number
+);
+
+const embedUrl = computed(() =>
+  showId.value && selectedSeason.value && selectedEpisode.value
+    ? `${baseUrl}${showId.value}/${selectedSeason.value}-${selectedEpisode.value.episode_number}`
+    : ''
+);
 
 const posterUrl = computed(() =>
   show.value?.poster_path
@@ -140,104 +153,99 @@ const bgStyle = computed(() => ({
     : 'none',
 }));
 
-const load = async () => {
-  const idParam = route.params.id as string;
-  const id = Number(idParam);
-  if (!Number.isFinite(id) || id <= 0) {
-    state.value = 'error';
-    return;
-  }
+const onShowFetchError = () => {
+  state.value = 'error';
+  show.value = undefined;
+};
+
+const tryFetchShow = async (id?: number) => {
+  if (id === undefined) return onShowFetchError();
+
   state.value = 'loading';
   try {
     const response = await fetch(`/api/tv/${id}`);
-    if (!response.ok) {
+    if (response.ok) {
+      show.value = await response.json();
+      state.value = 'loaded';
+    } else {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    show.value = await response.json();
-    // pick first season with episodes by default
-    const urlSeason = Number(route.query.season as string);
-    const hasUrlSeason = Number.isFinite(urlSeason) && urlSeason > 0;
-    const initial = hasUrlSeason
-      ? urlSeason
-      : (show.value?.seasons?.find(s => s.episode_count > 0)?.season_number ??
-        null);
-    selectedSeason.value = initial;
-    episodes.value = [];
-    selectedEpisode.value = null;
-    if (initial !== null) await fetchEpisodes(id, initial);
-    // If we computed an initial season, reflect it in the URL if not present
-    if (!hasUrlSeason && initial !== null) {
-      router.replace({
-        query: { ...route.query, season: String(initial) },
-      });
-    }
-    // If URL has an episode query, try to select it once episodes are loaded
-    const urlEpisode = Number(route.query.episode as string);
-    if (Number.isFinite(urlEpisode) && urlEpisode > 0) {
-      const match = episodes.value.find(e => e.episode_number === urlEpisode);
-      if (match) selectedEpisode.value = match;
-    }
-    if (selectedSeason.value && selectedEpisode.value) {
-      embedUrl.value = `${baseUrl}${id}/${selectedSeason.value}-${selectedEpisode.value.episode_number}`;
-    }
-    state.value = 'loaded';
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error(e);
-    state.value = 'error';
+    onShowFetchError();
   }
 };
 
-async function fetchEpisodes(id: number, seasonNumber: number) {
-  const response = await fetch(`/api/tv/${id}/season/${seasonNumber}`);
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-  }
-  episodes.value = await response.json();
-  selectedEpisode.value = null;
-}
+watch(showId, id => tryFetchShow(id), { immediate: true });
 
-function selectSeason(seasonNumber: number) {
-  if (!show.value) return;
-  selectedSeason.value = seasonNumber;
-  // Swallow fetch errors; page already shows error state on initial load
-  fetchEpisodes(show.value.id, seasonNumber).catch(() => {});
+const onSeasonFetchError = () => {
+  episodes.value = [];
+  selectedEpisode.value = undefined;
+};
+
+const tryFetchSeason = async (id?: number, season?: number) => {
+  if (!id || !season) return onSeasonFetchError();
+
+  try {
+    const response = await fetch(`/api/tv/${id}/season/${season}`);
+    if (response.ok) {
+      episodes.value = await response.json();
+    } else {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error(e);
+    onSeasonFetchError();
+  }
+};
+
+watch(
+  [showId, selectedSeason],
+  async ([id, season]) => tryFetchSeason(id, season),
+  { immediate: true }
+);
+
+// Watch for URL episode changes and update selected episode
+watch(
+  [urlEpisode, episodes],
+  ([_urlEpisode, _episodes]) => {
+    selectedEpisode.value = _episodes.find(
+      e => e.episode_number === _urlEpisode
+    );
+  },
+  { immediate: true }
+);
+
+const defaultSeason = computed(
+  () => show.value?.seasons?.find(s => s.episode_count > 0)?.season_number
+);
+
+// Update URL to reflect default season when show loads
+watch(
+  [show, urlSeason],
+  () => {
+    if (show.value && !urlSeason.value && defaultSeason.value) {
+      router.replace({
+        query: { ...route.query, season: String(defaultSeason.value) },
+      });
+    }
+  },
+  { immediate: true }
+);
+
+const selectSeason = (seasonNumber: number) => {
   router.replace({
     query: { ...route.query, season: String(seasonNumber), episode: undefined },
   });
-}
+};
 
-function selectEpisode(e: Episode) {
-  selectedEpisode.value = e;
+const selectEpisode = (e: Episode) => {
   router.replace({
     query: { ...route.query, episode: String(e.episode_number) },
   });
-}
-
-onMounted(load);
-watch(
-  () => [route.params.id, route.query.season, route.query.episode],
-  async () => {
-    // Handle back/forward navigation updating the query params
-    if (!show.value) return;
-    const id = Number(route.params.id as string);
-    const seasonFromUrl = Number(route.query.season as string);
-    const episodeFromUrl = Number(route.query.episode as string);
-    const validSeason = Number.isFinite(seasonFromUrl) && seasonFromUrl > 0;
-    const validEpisode = Number.isFinite(episodeFromUrl) && episodeFromUrl > 0;
-
-    if (validSeason && selectedSeason.value !== seasonFromUrl) {
-      selectedSeason.value = seasonFromUrl;
-      await fetchEpisodes(id, seasonFromUrl);
-    }
-    if (validEpisode) {
-      const match = episodes.value.find(
-        e => e.episode_number === episodeFromUrl
-      );
-      selectedEpisode.value = match || null;
-    }
-  }
-);
+};
 </script>
 
 <style scoped>
