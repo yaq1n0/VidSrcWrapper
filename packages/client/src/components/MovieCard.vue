@@ -44,7 +44,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import type { Movie } from '@vidsrc-wrapper/data';
+import type { Movie } from 'tmdb-ts';
 
 const props = defineProps<{
   movie: Movie;

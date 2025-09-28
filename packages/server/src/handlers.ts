@@ -1,28 +1,19 @@
-import type {
-  APIError,
-  Movie,
-  Show,
-  ShowDetails,
-  Episode,
-} from '@vidsrc-wrapper/data';
-import type { TMDBService } from '../services/tmdb.js';
-import { StatusCode } from 'hono/utils/http-status.js';
+import type { Movie, MovieDetails, TV, TvShowDetails, Episode } from 'tmdb-ts';
+import type { TMDBService } from './tmdb';
+import { StatusCode } from 'hono/utils/http-status';
 
-export interface HandlerResult<T> {
+/** Hono server API error type */
+export type APIError = {
+  error: string;
+  message?: string;
+};
+
+export type HandlerResult<T> = {
   status: StatusCode;
   body: T | APIError;
-}
+};
 
-type TMDBServiceLike = Pick<
-  TMDBService,
-  | 'searchMovies'
-  | 'getMovieById'
-  | 'searchShows'
-  | 'getShowById'
-  | 'getSeasonEpisodes'
->;
-
-export function createHandlers(tmdb: TMDBServiceLike) {
+export function createHandlers(tmdb: TMDBService) {
   const searchMovies = async ({
     query,
     page,
@@ -60,7 +51,7 @@ export function createHandlers(tmdb: TMDBServiceLike) {
     id,
   }: {
     id: number;
-  }): Promise<HandlerResult<Movie>> => {
+  }): Promise<HandlerResult<MovieDetails>> => {
     if (!Number.isFinite(id) || id <= 0) {
       const error: APIError = {
         error: 'Invalid id parameter',
@@ -86,7 +77,7 @@ export function createHandlers(tmdb: TMDBServiceLike) {
   }: {
     query?: string;
     page: number;
-  }): Promise<HandlerResult<Show[]>> => {
+  }): Promise<HandlerResult<TV[]>> => {
     if (!query) {
       const error: APIError = {
         error: 'Missing query parameter',
@@ -103,7 +94,7 @@ export function createHandlers(tmdb: TMDBServiceLike) {
     }
     try {
       const res = await tmdb.searchShows(query, page);
-      return { status: 200, body: res.results as Show[] };
+      return { status: 200, body: res.results as TV[] };
     } catch (e) {
       const error: APIError = {
         error: 'Internal server error',
@@ -117,7 +108,7 @@ export function createHandlers(tmdb: TMDBServiceLike) {
     id,
   }: {
     id: number;
-  }): Promise<HandlerResult<ShowDetails>> => {
+  }): Promise<HandlerResult<TvShowDetails>> => {
     if (!Number.isFinite(id) || id <= 0) {
       const error: APIError = {
         error: 'Invalid id parameter',

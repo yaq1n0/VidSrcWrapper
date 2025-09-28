@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Movie } from '@vidsrc-wrapper/data';
+import type { Movie } from 'tmdb-ts';
 import MovieCard from './MovieCard.vue';
 
 defineProps<{

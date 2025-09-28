@@ -44,7 +44,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import type { Show } from '@vidsrc-wrapper/data';
+import type { TV as Show } from 'tmdb-ts';
 
 const props = defineProps<{ show: Show }>();
 

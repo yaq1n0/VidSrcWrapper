@@ -4,12 +4,10 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createRouter, createMemoryHistory } from 'vue-router';
 import type { Component } from 'vue';
 import { waitForAsync, setupTestEnvironment } from '../helpers/TestHelpers';
-import {
-  setHttpClient,
-  MockHttpClient,
-  type ShowDetails,
-  type Episode,
-} from '@vidsrc-wrapper/data';
+import { createFetchMock } from '../helpers/FetchMockHelper';
+import type { TvShowDetails as ShowDetails, SeasonDetails } from 'tmdb-ts';
+
+type Episode = NonNullable<SeasonDetails['episodes']>[0];
 
 // Show-specific test helpers and data
 const createShowRouter = (component: Component) =>
@@ -64,10 +62,15 @@ const createShowWithEpisodesMock = (
   showData: ShowDetails,
   seasonNumber: number,
   episodes: Episode[]
-) =>
-  new MockHttpClient()
-    .on(`/api/tv/${showId}`, showData)
-    .on(`/api/tv/${showId}/season/${seasonNumber}`, episodes);
+) => {
+  const fetchMock = createFetchMock();
+  fetchMock.mockNextJsonResponse(`/api/tv/${showId}`, showData);
+  fetchMock.mockNextJsonResponse(
+    `/api/tv/${showId}/season/${seasonNumber}`,
+    episodes
+  );
+  return fetchMock;
+};
 
 // Show-specific test scenarios
 const testScenarios = {
@@ -115,18 +118,26 @@ const testScenarios = {
 describe('ShowDetailPage', () => {
   const { beforeEach: setupBeforeEach, afterEach: setupAfterEach } =
     setupTestEnvironment();
+  let fetchMock: ReturnType<typeof createFetchMock> | undefined;
 
-  beforeEach(setupBeforeEach);
-  afterEach(setupAfterEach);
+  beforeEach(() => {
+    setupBeforeEach();
+  });
+
+  afterEach(() => {
+    setupAfterEach();
+    if (fetchMock) {
+      fetchMock.restore();
+    }
+  });
 
   it('displays show information and handles season/episode selection with URL updates', async () => {
-    const mock = createShowWithEpisodesMock(
+    fetchMock = createShowWithEpisodesMock(
       1,
       testScenarios.showDetails.testShow,
       1,
       testScenarios.episodes.season1
     );
-    setHttpClient(mock);
 
     const router = createShowRouter(ShowDetailPage);
     router.push('/tv/1');
@@ -183,13 +194,12 @@ describe('ShowDetailPage', () => {
   });
 
   it('initializes state from URL query params and handles loading states', async () => {
-    const mock = createShowWithEpisodesMock(
+    fetchMock = createShowWithEpisodesMock(
       1,
       testScenarios.showDetails.urlTestShow,
       1,
       testScenarios.episodes.season1
     );
-    setHttpClient(mock);
 
     const router = createShowRouter(ShowDetailPage);
     router.push({ path: '/tv/1', query: { season: '1', episode: '2' } });
@@ -232,14 +242,9 @@ describe('ShowDetailPage', () => {
 
     expect(wrapper.text()).toContain('Failed to load show');
 
-    // Test with ID that causes fetch error (no mock data)
-    const mockWithError = createShowWithEpisodesMock(
-      999,
-      testScenarios.showDetails.testShow,
-      1,
-      []
-    );
-    setHttpClient(mockWithError);
+    // Test with ID that causes fetch error
+    fetchMock = createFetchMock();
+    fetchMock.mockNextError('/api/tv/999', 404, 'Not Found');
 
     router.push('/tv/999');
     await router.isReady();

@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Show } from '@vidsrc-wrapper/data';
+import type { TV as Show } from 'tmdb-ts';
 import ShowCard from './ShowCard.vue';
 
 defineProps<{

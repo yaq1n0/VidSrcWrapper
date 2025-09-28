@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { Movie, Show } from '@vidsrc-wrapper/data';
+import type { Movie, TV as Show } from 'tmdb-ts';
 import SearchForm from '../components/SearchForm.vue';
 import MovieList from '../components/MovieList.vue';
 import ShowList from '../components/ShowList.vue';
@@ -65,15 +65,19 @@ const handleSearch = async (query: string) => {
   loading.value = true;
   try {
     const endpoint = mode.value === 'movies' ? '/api/movies' : '/api/tv';
-    const { getHttpClient } = await import('@vidsrc-wrapper/data');
+    const url = `${endpoint}?query=${encodeURIComponent(trimmed)}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
     if (mode.value === 'movies') {
-      movies.value = await getHttpClient().getJson(
-        `${endpoint}?query=${encodeURIComponent(trimmed)}`
-      );
+      movies.value = data;
     } else {
-      shows.value = await getHttpClient().getJson(
-        `${endpoint}?query=${encodeURIComponent(trimmed)}`
-      );
+      shows.value = data;
     }
   } catch (error) {
     // eslint-disable-next-line no-console

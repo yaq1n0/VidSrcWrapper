@@ -8,11 +8,8 @@ import {
   setupTestEnvironment,
   testScenarios,
 } from '../helpers/TestHelpers';
-import {
-  MockHttpClient,
-  setHttpClient,
-  type Movie,
-} from '@vidsrc-wrapper/data';
+import { createFetchMock } from '../helpers/FetchMockHelper';
+import type { Movie } from 'tmdb-ts';
 
 // Movie-specific test helpers
 const createMovieRouter = (component: Component) =>
@@ -21,19 +18,30 @@ const createMovieRouter = (component: Component) =>
     routes: [{ path: '/movie/:id', component }],
   });
 
-const createMovieMock = (movieId: number, movieData: Movie) =>
-  new MockHttpClient().on(`/api/movies/${movieId}`, movieData);
+const createMovieMock = (movieId: number, movieData: Movie) => {
+  const fetchMock = createFetchMock();
+  fetchMock.mockNextJsonResponse(`/api/movies/${movieId}`, movieData);
+  return fetchMock;
+};
 
 describe('MovieDetailPage', () => {
   const { beforeEach: setupBeforeEach, afterEach: setupAfterEach } =
     setupTestEnvironment();
+  let fetchMock: ReturnType<typeof createFetchMock> | undefined;
 
-  beforeEach(setupBeforeEach);
-  afterEach(setupAfterEach);
+  beforeEach(() => {
+    setupBeforeEach();
+  });
+
+  afterEach(() => {
+    setupAfterEach();
+    if (fetchMock) {
+      fetchMock.restore();
+    }
+  });
 
   it('displays movie information and embeds player correctly', async () => {
-    const mock = createMovieMock(1, testScenarios.movies.inception);
-    setHttpClient(mock);
+    fetchMock = createMovieMock(1, testScenarios.movies.inception);
 
     const router = createMovieRouter(MovieDetailPage);
     router.push('/movie/1');
@@ -80,8 +88,7 @@ describe('MovieDetailPage', () => {
   });
 
   it('handles movie without poster and overview gracefully', async () => {
-    const mock = createMovieMock(2, testScenarios.movies.noPoster);
-    setHttpClient(mock);
+    fetchMock = createMovieMock(2, testScenarios.movies.noPoster);
 
     const router = createMovieRouter(MovieDetailPage);
     router.push('/movie/2');
@@ -140,10 +147,9 @@ describe('MovieDetailPage', () => {
   });
 
   it('handles API fetch errors gracefully', async () => {
-    // Setup mock that doesn't have the requested URL, causing 404
-    const mockWithError = new MockHttpClient();
-    // Don't add any mock data for /api/movies/999, so it will 404
-    setHttpClient(mockWithError);
+    // Setup mock that returns 404 for the requested URL
+    fetchMock = createFetchMock();
+    fetchMock.mockNextError('/api/movies/999', 404, 'Not Found');
 
     const router = createMovieRouter(MovieDetailPage);
     router.push('/movie/999');
@@ -168,7 +174,8 @@ describe('MovieDetailPage', () => {
   });
 
   it('displays all movie metadata correctly', async () => {
-    const mock = new MockHttpClient().on('/api/movies/123', {
+    fetchMock = createFetchMock();
+    fetchMock.mockNextJsonResponse('/api/movies/123', {
       id: 123,
       title: 'The Dark Knight',
       overview:
@@ -185,7 +192,6 @@ describe('MovieDetailPage', () => {
       original_title: 'The Dark Knight',
       video: false,
     });
-    setHttpClient(mock);
 
     const router = createMovieRouter(MovieDetailPage);
     router.push('/movie/123');

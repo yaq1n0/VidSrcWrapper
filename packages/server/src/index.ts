@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serve } from '@hono/node-server';
-import { TMDBService } from './services/tmdb.js';
-import { createHandlers } from './handlers/handlers.js';
+import { TMDBService } from './tmdb.js';
+import { createHandlers } from './handlers.js';
 import { CONFIG } from './config.js';
 
 const app = new Hono();

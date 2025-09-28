@@ -7,6 +7,8 @@ dotenvConfig({ path: resolve(process.cwd(), '.env') });
 export default defineConfig({
   testDir: './e2e',
   timeout: 60_000,
+  workers: 8,
+  fullyParallel: true, // because we only have 1 test file with many cases
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'retain-on-failure',

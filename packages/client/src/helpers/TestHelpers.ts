@@ -5,12 +5,7 @@ import {
 } from 'vue-router';
 import { nextTick } from 'vue';
 import { vi } from 'vitest';
-import {
-  setHttpClient,
-  MockHttpClient,
-  type Movie,
-  type Show,
-} from '@vidsrc-wrapper/data';
+import { type Movie, type TV as Show } from 'tmdb-ts';
 
 // ============================================================================
 // Mock Data Factories
@@ -98,7 +93,7 @@ export const setupTestEnvironment = (options: TestSetupOptions = {}) => {
     if (stubVitest) {
       vi.stubEnv('VITEST', 'true');
     }
-    setHttpClient(new MockHttpClient());
+    // HTTP client mocking is now handled individually by each test
   };
 
   const afterEachFn = () => {

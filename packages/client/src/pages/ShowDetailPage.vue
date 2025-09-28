@@ -111,7 +111,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import type { ShowDetails, Episode } from '@vidsrc-wrapper/data';
+import type { TvShowDetails as ShowDetails, SeasonDetails } from 'tmdb-ts';
+
+type Episode = NonNullable<SeasonDetails['episodes']>[0];
 
 type State = 'idle' | 'loading' | 'loaded' | 'error';
 
@@ -147,8 +149,11 @@ const load = async () => {
   }
   state.value = 'loading';
   try {
-    const { getHttpClient } = await import('@vidsrc-wrapper/data');
-    show.value = await getHttpClient().getJson(`/api/tv/${id}`);
+    const response = await fetch(`/api/tv/${id}`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    show.value = await response.json();
     // pick first season with episodes by default
     const urlSeason = Number(route.query.season as string);
     const hasUrlSeason = Number.isFinite(urlSeason) && urlSeason > 0;
@@ -184,10 +189,11 @@ const load = async () => {
 };
 
 async function fetchEpisodes(id: number, seasonNumber: number) {
-  const { getHttpClient } = await import('@vidsrc-wrapper/data');
-  episodes.value = await getHttpClient().getJson(
-    `/api/tv/${id}/season/${seasonNumber}`
-  );
+  const response = await fetch(`/api/tv/${id}/season/${seasonNumber}`);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+  episodes.value = await response.json();
   selectedEpisode.value = null;
 }
 

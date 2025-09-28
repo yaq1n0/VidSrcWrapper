@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import type { Movie } from '@vidsrc-wrapper/data';
+import type { Movie } from 'tmdb-ts';
 
 type State = 'idle' | 'loading' | 'loaded' | 'error';
 
@@ -69,8 +69,11 @@ const load = async () => {
   }
   state.value = 'loading';
   try {
-    const { getHttpClient } = await import('@vidsrc-wrapper/data');
-    movie.value = await getHttpClient().getJson(`/api/movies/${id}`);
+    const response = await fetch(`/api/movies/${id}`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    movie.value = await response.json();
     embedUrl.value = `${baseUrl}${id}`;
     state.value = 'loaded';
   } catch (e) {
