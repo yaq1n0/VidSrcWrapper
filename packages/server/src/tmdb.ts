@@ -7,7 +7,7 @@ import type {
   Episode,
 } from 'tmdb-ts';
 import { TMDB } from 'tmdb-ts';
-import { CONFIG } from './config';
+import { CONFIG } from './config.js';
 
 export class TMDBService {
   private tmdb: TMDB;

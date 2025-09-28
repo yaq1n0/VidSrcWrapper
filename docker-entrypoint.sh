@@ -8,7 +8,7 @@ if [ -z "$TMDB_API_KEY" ]; then
 fi
 
 # Start the Node API (Hono) on 127.0.0.1:$PORT
-node /app/packages/server/dist/index.js &
+node /app/packages/server/dist/src/index.js &
 
 # Start Nginx in the foreground (PID 1)
 exec nginx -g 'daemon off;'

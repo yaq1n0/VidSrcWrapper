@@ -1,5 +1,5 @@
 import type { Movie, MovieDetails, TV, TvShowDetails, Episode } from 'tmdb-ts';
-import type { TMDBService } from './tmdb';
+import type { TMDBService } from './tmdb.js';
 import { StatusCode } from 'hono/utils/http-status';
 
 /** Hono server API error type */
