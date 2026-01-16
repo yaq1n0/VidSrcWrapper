@@ -9,7 +9,6 @@
   "scripts": {
     "dev": "npm run dev --workspace=@vidsrc-wrapper/server & npm run dev --workspace=@vidsrc-wrapper/client",
     "build": "npm run build --workspace=@vidsrc-wrapper/server && npm run build --workspace=@vidsrc-wrapper/client",
-    "start": "npm run start --workspace=@vidsrc-wrapper/server & npm run dev --workspace=@vidsrc-wrapper/client",
     "type-check": "npm run type-check --workspace=@vidsrc-wrapper/server && npm run type-check --workspace=@vidsrc-wrapper/client",
     "prettier": "prettier --check \"packages/**/*.{ts,js,vue,json,css,scss}\"",
     "prettier:fix": "prettier --write \"packages/**/*.{ts,js,vue,json,css,scss}\"",
