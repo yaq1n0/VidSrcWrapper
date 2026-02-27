@@ -9,5 +9,10 @@ export const getInteger = (value: unknown): number | undefined => {
 
 export const getPositiveInteger = (value: unknown): number | undefined => {
   const num = getInteger(value);
-  return num && num > 0 ? num : undefined;
+  return num != null && num > 0 ? num : undefined;
+};
+
+export const getNonNegativeInteger = (value: unknown): number | undefined => {
+  const num = getInteger(value);
+  return num != null && num >= 0 ? num : undefined;
 };

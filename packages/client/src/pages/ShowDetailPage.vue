@@ -112,7 +112,10 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { TvShowDetails, Episode } from 'tmdb-ts';
-import { getPositiveInteger } from '../helpers/TypeHelpers';
+import {
+  getPositiveInteger,
+  getNonNegativeInteger,
+} from '../helpers/TypeHelpers';
 
 type State = 'idle' | 'loading' | 'loaded' | 'error';
 
@@ -126,12 +129,12 @@ const selectedEpisode = ref<Episode>();
 const baseUrl = 'https://vidsrc.xyz/embed/tv/';
 
 const showId = computed(() => getPositiveInteger(route.params.id));
-const urlSeason = computed(() => getPositiveInteger(route.query.season));
+const urlSeason = computed(() => getNonNegativeInteger(route.query.season));
 const urlEpisode = computed(() => getPositiveInteger(route.query.episode));
 
 const selectedSeason = computed(
   () =>
-    urlSeason.value ||
+    urlSeason.value ??
     show.value?.seasons?.find(s => s.episode_count > 0)?.season_number
 );
 
@@ -185,7 +188,7 @@ const onSeasonFetchError = () => {
 };
 
 const tryFetchSeason = async (id?: number, season?: number) => {
-  if (!id || !season) return onSeasonFetchError();
+  if (id == null || season == null) return onSeasonFetchError();
 
   try {
     const response = await fetch(`/api/tv/${id}/season/${season}`);
@@ -226,7 +229,7 @@ const defaultSeason = computed(
 watch(
   [show, urlSeason],
   () => {
-    if (show.value && !urlSeason.value && defaultSeason.value) {
+    if (show.value && urlSeason.value == null && defaultSeason.value != null) {
       router.replace({
         query: { ...route.query, season: String(defaultSeason.value) },
       });
