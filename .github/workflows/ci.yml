@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: CI
 
 on:
   push:
@@ -11,10 +11,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node 22
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: 24
 
       - name: Install dependencies
         run: npm ci
@@ -25,14 +25,13 @@ jobs:
       - name: Run vitest unit tests with coverage
         run: npm run test:coverage
 
-      # TODO: Uncomment this when we fix playwright in CI (works locally, apparently a timing issue)
-      # - name: Install playwright browsers
-      #   run: npm run e2e:install
+      - name: Install playwright browsers
+        run: npm run e2e:install
 
-      # - name: Run e2e tests
-      #   env:
-      #     TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-      #   run: npm run e2e
+      - name: Run e2e tests
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        run: npm run e2e
 
       - name: Check linting
         run: npm run lint
