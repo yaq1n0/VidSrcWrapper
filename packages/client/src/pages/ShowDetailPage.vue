@@ -65,9 +65,10 @@
             class="player"
             :src="embedUrl"
             frameborder="0"
-            allow="autoplay; fullscreen; picture-in-picture"
+            allow="fullscreen; picture-in-picture"
             allowfullscreen
             referrerpolicy="no-referrer"
+            sandbox="allow-scripts allow-same-origin"
           ></iframe>
         </div>
       </div>
@@ -139,11 +140,12 @@ const selectedSeason = computed(
     show.value?.seasons?.find(s => s.episode_count > 0)?.season_number
 );
 
-const embedUrl = computed(() =>
-  showId.value && selectedSeason.value && selectedEpisode.value
-    ? `${baseUrl}${showId.value}/${selectedSeason.value}-${selectedEpisode.value.episode_number}`
-    : ''
-);
+const embedUrl = computed(() => {
+  if (!showId.value || !selectedSeason.value || !selectedEpisode.value)
+    return '';
+  const vidsrcUrl = `${baseUrl}${showId.value}/${selectedSeason.value}-${selectedEpisode.value.episode_number}`;
+  return `/api/embed?url=${encodeURIComponent(vidsrcUrl)}`;
+});
 
 const posterUrl = computed(() =>
   show.value?.poster_path

@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import { serve } from '@hono/node-server';
 import { TMDBService } from './tmdb.js';
 import { createHandlers } from './tmdbHandlers.js';
+import { getEmbed } from './embedHandlers.js';
 import { CONFIG } from './config.js';
 
 const app = new Hono();
@@ -70,6 +71,13 @@ app.get('/api/tv/:id/season/:seasonNumber', async context => {
   const result = await handlers.getSeasonEpisodes({ id: showId, seasonNumber });
   context.status(result.status);
   return context.json(result.body);
+});
+
+// Embed proxy — fetches a VidSrc embed page, strips tracking/anti-devtool scripts
+app.get('/api/embed', async c => {
+  const result = await getEmbed(c.req.query('url'));
+  if (!result.ok) return c.text(result.message, result.status);
+  return c.html(result.html);
 });
 
 // Start server

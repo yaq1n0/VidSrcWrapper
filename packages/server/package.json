@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "debug:embed": "tsx src/scripts/debugEmbed.ts",
+    "debug:embed:deep": "tsx src/scripts/deepDebugEmbed.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.18.1",

@@ -20,6 +20,7 @@ export type ServerConfig = {
   TMDB_API_KEY: string;
   TMDB_BASE_URL: string;
   TMDB_IMAGE_BASE_URL: string;
+  VIDSRC_BASE_URL: string;
 };
 
 let env: ServerConfig['ENV'] = 'prod';
@@ -32,6 +33,7 @@ export const CONFIG: ServerConfig = {
   TMDB_API_KEY: process.env.TMDB_API_KEY || '',
   TMDB_BASE_URL: 'https://api.themoviedb.org/3',
   TMDB_IMAGE_BASE_URL: 'https://image.tmdb.org/t/p/w500',
+  VIDSRC_BASE_URL: 'https://vsrc.su', // this should match up with /client/src/config.ts's VIDSRC_BASE_URL or embeds will get rejected.
 };
 
 // if you don't have a TMDB_API_KEY and you aren't testing, then throw an error and exit.

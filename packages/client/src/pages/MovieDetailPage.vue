@@ -23,9 +23,10 @@
         class="player"
         :src="embedUrl"
         frameborder="0"
-        allow="autoplay; fullscreen; picture-in-picture"
+        allow="fullscreen; picture-in-picture"
         allowfullscreen
         referrerpolicy="no-referrer"
+        sandbox="allow-scripts allow-same-origin"
       ></iframe>
     </div>
   </div>
@@ -53,7 +54,9 @@ const movieId = computed(() => getPositiveInteger(route.params.id));
 
 // Reactive embed URL that updates automatically
 const embedUrl = computed(() =>
-  movieId.value ? `${baseUrl}${movieId.value}` : ''
+  movieId.value
+    ? `/api/embed?url=${encodeURIComponent(`${baseUrl}${movieId.value}`)}`
+    : ''
 );
 
 const posterUrl = computed(() =>

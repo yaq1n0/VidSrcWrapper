@@ -11,7 +11,25 @@
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue';
+
+// Known message shapes sent upward by the VidSrc/cloudnestra postMessage relay.
+// Anything outside this set is unexpected and gets logged for visibility.
+const KNOWN_EMBED_TYPES = new Set(['PLAYER_EVENT']);
+
+function handleEmbedMessage(event: MessageEvent) {
+  const data = event.data;
+  if (data && typeof data === 'object' && KNOWN_EMBED_TYPES.has(data.type)) {
+    return; // expected player event — ignore silently
+  }
+  // eslint-disable-next-line no-console
+  console.warn('[embed] unexpected postMessage from', event.origin, ':', data);
+}
+
+onMounted(() => window.addEventListener('message', handleEmbedMessage));
+onUnmounted(() => window.removeEventListener('message', handleEmbedMessage));
+</script>
 
 <style scoped>
 .app {

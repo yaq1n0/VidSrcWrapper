@@ -22,7 +22,9 @@
     "docker:build": "docker build -t vidsrc-wrapper:latest .",
     "docker:run": "docker run -d --name vidsrc --restart unless-stopped -p 8080:80 -e TMDB_API_KEY=$TMDB_API_KEY vidsrc-wrapper:latest",
     "docker:run:env": "docker run -d --name vidsrc --restart unless-stopped -p 8080:80 --env-file .env vidsrc-wrapper:latest",
-    "docker:stop": "docker rm -f vidsrc || true"
+    "docker:stop": "docker rm -f vidsrc || true",
+    "debug:embed": "cd packages/server && npm run debug:embed",
+    "debug:embed:deep": "cd packages/server && npm run debug:embed:deep"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
