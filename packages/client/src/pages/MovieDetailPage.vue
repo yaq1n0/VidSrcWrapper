@@ -39,6 +39,7 @@ import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { Movie } from 'tmdb-ts';
 import { getPositiveInteger } from '../helpers/TypeHelpers';
+import { CONFIG } from '../config';
 
 type State = 'idle' | 'loading' | 'loaded' | 'error';
 
@@ -46,7 +47,7 @@ const route = useRoute();
 const movie = ref<Movie>();
 const state = ref<State>('idle');
 
-const baseUrl = 'https://vidsrc.xyz/embed/movie/';
+const baseUrl = `${CONFIG.VIDSRC_BASE_URL}/embed/movie/`;
 
 const movieId = computed(() => getPositiveInteger(route.params.id));
 

@@ -116,6 +116,7 @@ import {
   getPositiveInteger,
   getNonNegativeInteger,
 } from '../helpers/TypeHelpers';
+import { CONFIG } from '../config';
 
 type State = 'idle' | 'loading' | 'loaded' | 'error';
 
@@ -126,7 +127,7 @@ const state = ref<State>('idle');
 const episodes = ref<Episode[]>([]);
 const selectedEpisode = ref<Episode>();
 
-const baseUrl = 'https://vidsrc.xyz/embed/tv/';
+const baseUrl = `${CONFIG.VIDSRC_BASE_URL}/embed/tv/`;
 
 const showId = computed(() => getPositiveInteger(route.params.id));
 const urlSeason = computed(() => getNonNegativeInteger(route.query.season));

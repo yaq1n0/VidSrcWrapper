@@ -10,6 +10,7 @@ import {
 } from '../helpers/TestHelpers';
 import { createFetchMock } from '../helpers/FetchMockHelper';
 import type { Movie } from 'tmdb-ts';
+import { CONFIG } from '../config';
 
 const createMovieRouter = (component: Component) =>
   createRouter({
@@ -76,7 +77,9 @@ describe('MovieDetailPage', () => {
 
     const iframe = wrapper.find('iframe.player');
     expect(iframe.exists()).toBe(true);
-    expect(iframe.attributes('src')).toBe('https://vidsrc.xyz/embed/movie/1');
+    expect(iframe.attributes('src')).toBe(
+      `${CONFIG.VIDSRC_BASE_URL}/embed/movie/1`
+    );
     expect(iframe.attributes('allowfullscreen')).toBeDefined();
     expect(iframe.attributes('frameborder')).toBe('0');
   });
@@ -107,7 +110,9 @@ describe('MovieDetailPage', () => {
     // Verify player still works
     const iframe = wrapper.find('iframe.player');
     expect(iframe.exists()).toBe(true);
-    expect(iframe.attributes('src')).toBe('https://vidsrc.xyz/embed/movie/2');
+    expect(iframe.attributes('src')).toBe(
+      `${CONFIG.VIDSRC_BASE_URL}/embed/movie/2`
+    );
   });
 
   it('handles loading and error states correctly', async () => {
