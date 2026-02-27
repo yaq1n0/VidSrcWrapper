@@ -40,7 +40,7 @@ export class TMDBService {
       });
     } catch (error) {
       console.error('Error searching movies:', error);
-      throw new Error('Failed to search movies');
+      throw new Error('Failed to search movies', { cause: error });
     }
   }
 
@@ -54,7 +54,7 @@ export class TMDBService {
       return await this.tmdb.movies.details(movieId);
     } catch (error) {
       console.error(`Error fetching movie by id ${movieId}:`, error);
-      throw new Error('Failed to fetch movie details');
+      throw new Error('Failed to fetch movie details', { cause: error });
     }
   }
 
@@ -82,7 +82,7 @@ export class TMDBService {
       });
     } catch (error) {
       console.error('Error searching TV shows:', error);
-      throw new Error('Failed to search TV shows');
+      throw new Error('Failed to search TV shows', { cause: error });
     }
   }
 
@@ -96,7 +96,7 @@ export class TMDBService {
       return await this.tmdb.tvShows.details(showId);
     } catch (error) {
       console.error(`Error fetching TV show by id ${showId}:`, error);
-      throw new Error('Failed to fetch TV show details');
+      throw new Error('Failed to fetch TV show details', { cause: error });
     }
   }
 
@@ -121,7 +121,7 @@ export class TMDBService {
         `Error fetching episodes for show ${showId} season ${seasonNumber}:`,
         error
       );
-      throw new Error('Failed to fetch season episodes');
+      throw new Error('Failed to fetch season episodes', { cause: error });
     }
   }
 }
