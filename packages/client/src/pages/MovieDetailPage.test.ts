@@ -10,7 +10,7 @@ import {
 } from '../helpers/TestHelpers';
 import { createFetchMock } from '../helpers/FetchMockHelper';
 import type { Movie } from 'tmdb-ts';
-import { CONFIG } from '../config';
+import { CONFIG, getEmbedUrl } from '../config';
 
 const createMovieRouter = (component: Component) =>
   createRouter({
@@ -78,7 +78,7 @@ describe('MovieDetailPage', () => {
     const iframe = wrapper.find('iframe.player');
     expect(iframe.exists()).toBe(true);
     expect(iframe.attributes('src')).toBe(
-      `${CONFIG.VIDSRC_BASE_URL}/embed/movie/1`
+      getEmbedUrl(`${CONFIG.VIDSRC_BASE_URL}/embed/movie/1`)
     );
     expect(iframe.attributes('allowfullscreen')).toBeDefined();
     expect(iframe.attributes('frameborder')).toBe('0');
@@ -111,7 +111,7 @@ describe('MovieDetailPage', () => {
     const iframe = wrapper.find('iframe.player');
     expect(iframe.exists()).toBe(true);
     expect(iframe.attributes('src')).toBe(
-      `${CONFIG.VIDSRC_BASE_URL}/embed/movie/2`
+      getEmbedUrl(`${CONFIG.VIDSRC_BASE_URL}/embed/movie/2`)
     );
   });
 
@@ -209,8 +209,7 @@ describe('MovieDetailPage', () => {
 
     // Meta information (date and rating)
     const meta = wrapper.find('.meta');
-    expect(meta.text()).toContain('7/18/2008'); // Date formatting
-    expect(meta.text()).toContain('⭐ 9.0');
+    expect(meta.text()).toContain('18/07/2008· ⭐ 9.0'); // Date formatting
 
     // Overview
     const overview = wrapper.find('.overview');

@@ -117,7 +117,7 @@ import {
   getPositiveInteger,
   getNonNegativeInteger,
 } from '../helpers/TypeHelpers';
-import { CONFIG } from '../config';
+import { CONFIG, getEmbedUrl } from '../config';
 
 type State = 'idle' | 'loading' | 'loaded' | 'error';
 
@@ -144,7 +144,7 @@ const embedUrl = computed(() => {
   if (!showId.value || !selectedSeason.value || !selectedEpisode.value)
     return '';
   const vidsrcUrl = `${baseUrl}${showId.value}/${selectedSeason.value}-${selectedEpisode.value.episode_number}`;
-  return `/api/embed?url=${encodeURIComponent(vidsrcUrl)}`;
+  return getEmbedUrl(vidsrcUrl);
 });
 
 const posterUrl = computed(() =>

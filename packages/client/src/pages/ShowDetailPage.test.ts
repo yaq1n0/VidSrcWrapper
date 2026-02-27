@@ -10,7 +10,7 @@ import {
 } from '../helpers/TestHelpers';
 import { createFetchMock } from '../helpers/FetchMockHelper';
 import type { TvShowDetails, SeasonDetails } from 'tmdb-ts';
-import { CONFIG } from '../config';
+import { CONFIG, getEmbedUrl } from '../config';
 
 type Episode = NonNullable<SeasonDetails['episodes']>[0];
 
@@ -106,7 +106,7 @@ describe('ShowDetailPage', () => {
       const iframe = wrapper.find('iframe.player');
       expect(iframe.exists()).toBe(true);
       expect(iframe.attributes('src')).toContain(
-        `${CONFIG.VIDSRC_BASE_URL}/embed/tv/1/1-1`
+        getEmbedUrl(`${CONFIG.VIDSRC_BASE_URL}/embed/tv/1/1-1`)
       );
     }
   });
@@ -146,8 +146,8 @@ describe('ShowDetailPage', () => {
 
     // Verify player URL includes correct episode
     const iframe = wrapper.find('iframe.player');
-    expect(iframe.attributes('src')).toContain(
-      `${CONFIG.VIDSRC_BASE_URL}/embed/tv/1/1-2`
+    expect(iframe.attributes('src')).toBe(
+      getEmbedUrl(`${CONFIG.VIDSRC_BASE_URL}/embed/tv/1/1-2`)
     );
   });
 

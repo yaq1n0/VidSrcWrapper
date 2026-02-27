@@ -40,7 +40,7 @@ import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import type { Movie } from 'tmdb-ts';
 import { getPositiveInteger } from '../helpers/TypeHelpers';
-import { CONFIG } from '../config';
+import { CONFIG, getEmbedUrl } from '../config';
 
 type State = 'idle' | 'loading' | 'loaded' | 'error';
 
@@ -54,9 +54,7 @@ const movieId = computed(() => getPositiveInteger(route.params.id));
 
 // Reactive embed URL that updates automatically
 const embedUrl = computed(() =>
-  movieId.value
-    ? `/api/embed?url=${encodeURIComponent(`${baseUrl}${movieId.value}`)}`
-    : ''
+  movieId.value ? getEmbedUrl(`${baseUrl}${movieId.value}`) : ''
 );
 
 const posterUrl = computed(() =>
