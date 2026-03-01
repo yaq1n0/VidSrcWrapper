@@ -26,6 +26,9 @@
     "debug:embed": "cd packages/server && npm run debug:embed",
     "debug:embed:deep": "cd packages/server && npm run debug:embed:deep"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.59.0"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.3.2",
