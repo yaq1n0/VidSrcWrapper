@@ -20,8 +20,8 @@
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "docker:build": "docker build -t vidsrc-wrapper:latest .",
-    "docker:run": "docker run -d --name vidsrc --restart unless-stopped -p 8080:80 -e TMDB_API_KEY=$TMDB_API_KEY vidsrc-wrapper:latest",
-    "docker:run:env": "docker run -d --name vidsrc --restart unless-stopped -p 8080:80 --env-file .env vidsrc-wrapper:latest",
+    "docker:run": "docker run -d --name vidsrc --restart unless-stopped -p 8080:80 -p 8081:81 -e TMDB_API_KEY=$TMDB_API_KEY vidsrc-wrapper:latest",
+    "docker:run:env": "docker run -d --name vidsrc --restart unless-stopped -p 8080:80 -p 8081:81 --env-file .env vidsrc-wrapper:latest",
     "docker:stop": "docker rm -f vidsrc || true",
     "debug:embed": "cd packages/server && npm run debug:embed",
     "debug:embed:deep": "cd packages/server && npm run debug:embed:deep"

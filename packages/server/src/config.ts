@@ -13,6 +13,13 @@ export type ServerConfig = {
   ENV: 'dev' | 'prod' | 'test';
   PORT: number;
   /**
+   * Port for the embed-proxy listener. It is a separate listener (and thus a
+   * separate origin from the app) on purpose: the proxied third-party embed
+   * HTML must never be served same-origin with the app. See README
+   * "Sandbox tradeoffs".
+   */
+  EMBED_PORT: number;
+  /**
    * TMDB API Key
    * This should be your TMDB Read Access Token (Bearer token), not the API key that's part of the query param
    * @see https://www.themoviedb.org/settings/api
@@ -30,6 +37,7 @@ if (process.env.ENV === 'test' || process.env.VITEST === 'true') env = 'test';
 export const CONFIG: ServerConfig = {
   ENV: env,
   PORT: parseInt(process.env.PORT || '8080'),
+  EMBED_PORT: parseInt(process.env.EMBED_PORT || '8081'),
   TMDB_API_KEY: process.env.TMDB_API_KEY || '',
   TMDB_BASE_URL: 'https://api.themoviedb.org/3',
   TMDB_IMAGE_BASE_URL: 'https://image.tmdb.org/t/p/w500',

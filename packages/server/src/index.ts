@@ -73,8 +73,17 @@ app.get('/api/tv/:id/season/:seasonNumber', async context => {
   return context.json(result.body);
 });
 
-// Embed proxy — fetches a VidSrc embed page, strips tracking/anti-devtool scripts
-app.get('/api/embed', async c => {
+// Embed proxy — fetches a VidSrc embed page, strips tracking/anti-devtool
+// scripts. Served by a SEPARATE listener (= separate origin) so the cleaned
+// third-party HTML and the scripts it loads never run same-origin with the
+// app. This is the isolation the (player-killing) iframe sandbox attribute
+// could not provide — see README "Sandbox tradeoffs". Deliberately NOT
+// mounted on the main app: /api/embed on the app origin must 404.
+const embedApp = new Hono();
+embedApp.get('/', c =>
+  c.json({ message: 'VidSrc embed proxy', status: 'healthy' })
+);
+embedApp.get('/api/embed', async c => {
   const result = await getEmbed(c.req.query('url'));
   if (!result.ok) return c.text(result.message, result.status);
   return c.html(result.html);
@@ -86,8 +95,12 @@ console.log(`🚀 Server starting on port ${port}`);
 console.log(`📡 TMDB API key configured: ${CONFIG.TMDB_API_KEY ? '✅' : '❌'}`);
 
 serve({ fetch: app.fetch, port });
+serve({ fetch: embedApp.fetch, port: CONFIG.EMBED_PORT });
 
 console.log(`🌟 Server running at http://localhost:${port}`);
+console.log(
+  `🎬 Embed proxy (separate origin) at http://localhost:${CONFIG.EMBED_PORT}/api/embed`
+);
 console.log(
   `🔍 Movies endpoint: http://localhost:${port}/api/movies?query=batman`
 );

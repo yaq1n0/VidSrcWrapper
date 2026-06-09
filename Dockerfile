@@ -30,9 +30,11 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-# The Node server listens on 8080; Nginx serves on 80
+# The Node server listens on 8080 (API) and 8081 (embed proxy);
+# Nginx serves the app on 80 and the embed origin on 81
 ENV PORT=8080
-EXPOSE 80
+ENV EMBED_PORT=8081
+EXPOSE 80 81
 
 CMD ["/docker-entrypoint.sh"]
 
