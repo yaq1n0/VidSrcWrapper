@@ -15,17 +15,17 @@ VidSrc embed pages cannot be dropped directly into a `<iframe src="https://vsrc.
 3. **Analytics tracking** — Histats.com injects a tracking counter and pixel into every embed page.
 4. **Content-Security-Policy friction** — serving the embed from a foreign domain complicates CSP and referrer policy on the host app.
 
-The proxy solves all of this: the server fetches the VidSrc HTML, strips the unwanted scripts, and serves the cleaned HTML from the app's own origin (`/api/embed?url=...`). The client then loads it in a sandboxed `<iframe>`.
+The proxy solves all of this: the server fetches the VidSrc HTML, strips the unwanted scripts, and serves the cleaned HTML from a **dedicated embed origin** (`http://<host>:8081/api/embed?url=...` — a separate listener, see [Origin isolation](#origin-isolation-the-sandbox-replacement)). The client then loads it in an `<iframe>` (deliberately **not** sandboxed — see [Sandbox tradeoffs](#sandbox-tradeoffs)).
 
 ### Request flow
 
 ```
 Browser
-  └─ GET /api/embed?url=https://vsrc.su/embed/movie/27205
+  └─ GET http://<host>:8081/api/embed?url=https://vsrc.su/embed/movie/27205   (embed origin, NOT the app origin)
        └─ server fetches https://vsrc.su/embed/movie/27205
-            └─ cleanEmbedHtml() strips bad scripts
+            └─ cleanEmbedHtml() strips bad scripts, injectBaseHref() fixes relative URLs
                  └─ returns cleaned HTML as text/html
-                      └─ <iframe sandbox="allow-scripts allow-same-origin" src="/api/embed?url=...">
+                      └─ <iframe allow="fullscreen; picture-in-picture" src="http://<host>:8081/api/embed?url=...">
 ```
 
 The embed page itself contains a nested `<iframe src="//cloudnestra.com/rcp/...">` that loads the actual video player. That sub-iframe is loaded directly by the browser; it never passes through the proxy.
@@ -33,8 +33,10 @@ The embed page itself contains a nested `<iframe src="//cloudnestra.com/rcp/..."
 ### Endpoint
 
 ```
-GET /api/embed?url=<encoded-vidsrc-embed-url>
+GET /api/embed?url=<encoded-vidsrc-embed-url>     (served ONLY on the embed listener, EMBED_PORT, default 8081)
 ```
+
+The main API listener (`PORT`, default 8080) deliberately does **not** route `/api/embed` — requesting it there returns 404, so the proxied third-party HTML can never be served same-origin with the app.
 
 - **400** — URL is missing or its origin does not match `CONFIG.VIDSRC_BASE_URL`
 - **502** — VidSrc returned a non-2xx response
@@ -104,7 +106,7 @@ function dtc_sbx() {
 }
 ```
 
-Stripping `sbx.js` from the VidSrc HTML (served through the proxy) neutralises check 1 and check 2 for the outer frame. The cloudnestra sub-iframe loads its own copy of `sbx.js` directly from `cloudnestra.com` — we cannot strip that one. The iframe sandbox configuration is designed to defuse it; see [Sandbox tradeoffs](#sandbox-tradeoffs) below.
+Stripping `sbx.js` from the VidSrc HTML (served through the proxy) neutralises check 1 and check 2 for the outer frame. The player sub-iframe loads its own copy of `sbx.js` directly from the player host — we cannot strip that one, and it is the reason the client iframe must not be sandboxed; see [Sandbox tradeoffs](#sandbox-tradeoffs) below.
 
 ### 3. Bad inline `<script>` blocks (`BAD_INLINE_SCRIPT_PATTERNS`)
 
@@ -112,6 +114,10 @@ Stripping `sbx.js` from the VidSrc HTML (served through the proxy) neutralises c
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `/DisableDevtool\s*\(/i` | After the `<script src="disable-devtool...">` is removed, VidSrc still has an inline `DisableDevtool({...})` config call that would throw a ReferenceError at best or execute against a stale cached copy at worst |
 | `/_Hasync\s*=/i`         | Any residual Histats bootstrap not caught by the comment-block regex                                                                                                                                               |
+
+### 4. `<base href>` injection
+
+The embed page references root-relative resources (`/style.css`, `/sources.js`, `/base64.js`, `/jquery-3.7.1.min.js`, ...). Served from the app's own origin those resolve against the app host and 404 — most visibly `style.css`, without which `html`/`body` have no height and the player iframe's `height: 100%` collapses to the 150px iframe default (the player rendered as a thin strip at the top of its box). `injectBaseHref` adds `<base href="<final upstream URL>">` (the post-redirect URL — `vsrc.su` 301s to a mirror domain) at the start of `<head>`, restoring resolution of all relative URLs to the embed host, exactly as if the page were loaded directly.
 
 ---
 
@@ -121,43 +127,43 @@ The client renders the embed as:
 
 ```html
 <iframe
-  sandbox="allow-scripts allow-same-origin"
   allow="fullscreen; picture-in-picture"
   allowfullscreen
   referrerpolicy="no-referrer"
-  src="/api/embed?url=..."
+  src="http://<host>:8081/api/embed?url=..."
 />
 ```
 
-### Why `allow-scripts`
+### Why there is no `sandbox` attribute
 
-The player requires JavaScript to function. Without it, the embed renders as inert static HTML — the play button has no handler and nothing loads.
+An earlier iteration used `sandbox="allow-scripts allow-same-origin"`, on the theory that `allow-same-origin` would suppress the `document.domain` `SecurityError` and defuse check 2 of `sbx.js`. Empirically (verified June 2026) this does not hold: sandbox flags propagate from our iframe into every nested browsing context, and assigning `document.domain` in a sandboxed document throws unconditionally — there is **no sandbox token that relaxes it** (the error message itself contains the word "sandbox", which is exactly what `sbx.js` greps for). The player host's own copy of `sbx.js` (loaded directly by the browser inside the nested cross-origin player iframe, never through our proxy) therefore detects the sandbox and redirects its frame to `/sbx.html` — a dead 404 page. Result: black player, no playback, no fullscreen.
 
-### Why `allow-same-origin` is also required
+Since no combination of sandbox tokens avoids this, the `sandbox` attribute is omitted entirely.
 
-`allow-scripts` alone is not sufficient. The cloudnestra sub-iframe loads its own `sbx.js` (which we cannot strip). That script's check 2 calls `document.domain = document.domain`. When `allow-same-origin` is absent the browsing context has an opaque origin, and this mutation throws a `SecurityError` whose message contains the word `"sandbox"` — which `sbx.js` explicitly looks for to trigger its redirect. Adding `allow-same-origin` suppresses the error, defusing check 2.
+### Origin isolation (the sandbox replacement)
 
-Check 1 (`window.frameElement.hasAttribute("sandbox")`) is also neutralised: the cloudnestra iframe is cross-origin from the VidSrc frame, so `window.frameElement` returns `null` (cross-origin access is blocked by the browser), and the `hasAttribute` call throws a `TypeError` that is caught and swallowed.
+Since the `sandbox` attribute is off the table, the isolation it was *meant* to provide comes from serving the embed on its **own origin** instead:
 
-### The `allow-same-origin` risk
+- The Node server runs a second listener (`EMBED_PORT`, default **8081**) whose only route is `/api/embed`. The main API listener does not serve the embed at all.
+- The client builds the iframe `src` against `CONFIG.EMBED_ORIGIN` (default `<protocol>//<hostname>:8081`, overridable with `VITE_EMBED_ORIGIN` at build time).
+- In Docker, Nginx exposes the embed listener on container port 81; the documented `docker run` flags publish it as host port 8081 (`-p 8080:80 -p 8081:81`).
 
-`allow-scripts + allow-same-origin` together are traditionally described as a "sandbox escape" because the embedded content can access the host origin's cookies and `localStorage`. This is a real tradeoff:
+Because the embed document is cross-origin to the app, the browser's same-origin policy — which no embedded script can detect or escape, unlike a sandbox attribute — guarantees the embed's JS cannot touch the app's DOM, storage, or cookies. Verified empirically (Playwright, June 2026): `window.parent.document` from the embed frame throws `SecurityError`, while the player chain (rcp → prorcp → Turnstile) loads and fullscreen stays enabled in every frame.
 
-- **Mitigated** — the server strips the scripts most likely to exfiltrate data (disable-devtool, Histats, sbx.js, obscure TLD trackers)
-- **Mitigated** — this project sets no sensitive session cookies; the TMDB API key is a server-side environment variable and is never sent to the client
-- **Residual risk** — if VidSrc/cloudnestra were ever to serve weaponised JS, it would run with same-origin access to this app's origin. Acceptable for a personal media wrapper; not acceptable for an app with user authentication or sensitive stored data
+Note this is *stronger* than the old `sandbox="allow-scripts allow-same-origin"` ever was: with `allow-same-origin` on same-origin proxied content, embedded scripts had full access to the app origin anyway (and could even reach up and remove the sandbox attribute). The sandbox's only real contribution was blocking popups and top-level navigation.
 
-### What the sandbox still blocks (permissions not granted)
+### What we lose without `sandbox`, and what remains
 
-| Capability                       | Blocked because                          |
-| -------------------------------- | ---------------------------------------- |
-| Navigate the top-level page      | `allow-top-navigation` not set           |
-| Open popup windows               | `allow-popups` not set                   |
-| Submit forms to external servers | `allow-forms` not set                    |
-| Pointer lock                     | `allow-pointer-lock` not set             |
-| `window.opener` escape           | `allow-popups-to-escape-sandbox` not set |
+Without sandboxing, the embed can (with user activation) open popups and navigate the top-level page — sandbox was the only mechanism that blocked those, and no non-sandbox mechanism exists. Remaining mitigations:
 
-The `referrerpolicy="no-referrer"` attribute additionally prevents the embed from learning the URL of the page it is embedded in via `Referer` headers.
+- **Origin isolation** (above) — embed JS runs cross-origin to the app: no DOM, storage, or cookie access
+- `allow="fullscreen; picture-in-picture"` — permissions policy grants nothing else (no camera, mic, geolocation, etc.; cross-origin autoplay is also denied by the default `'self'` allowlist)
+- `referrerpolicy="no-referrer"` — the embed never learns the URL of the page embedding it
+- Server-side `cleanEmbedHtml` — strips the known tracking/anti-devtool/junk scripts from the outer page
+- The host app's `postMessage` listener takes no action on any message from the embed
+- This project sets no sensitive session cookies; the TMDB API key is a server-side environment variable and is never sent to the client
+
+**Residual risk** — if the embed provider serves weaponised JS it can still, with a user gesture, open popups or redirect the top-level page (annoyance/phishing-grade, not data-theft-grade — origin isolation blocks access to the app itself). Acceptable for a personal media wrapper.
 
 ---
 

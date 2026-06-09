@@ -31,4 +31,5 @@ This isn't hosted anywhere, but it's made in such a way to make it very simple t
 This starts:
 
 - Backend at `http://localhost:8080`
+- Embed proxy at `http://localhost:8081` (own origin on purpose — see [RETRO_FULLSCREEN_AND_SANDBOX.md](RETRO_FULLSCREEN_AND_SANDBOX.md))
 - Frontend at `http://localhost:3000`
