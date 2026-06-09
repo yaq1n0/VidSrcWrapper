@@ -6,10 +6,13 @@ const BAD_SCRIPT_SRC_PATTERNS = [
   /disable-devtool/i,
   /histats\.com/i,
   /unpkg\.com\/disable-devtool/i,
-  // sbx.js — sandbox-detection script that redirects the iframe to /sbx.html when it
-  // detects a sandboxed browsing context via window.frameElement.hasAttribute("sandbox")
-  // or a document.domain mutation error. Must be stripped before the iframe is served so
-  // the sandbox attribute on our <iframe> doesn't trigger the redirect.
+  // sbx.js — sandbox-detection script that redirects the iframe to /sbx.html (a dead
+  // 404 page) when it detects a sandboxed browsing context via
+  // window.frameElement.hasAttribute("sandbox") or a document.domain mutation error.
+  // Stripped as junk-removal for the outer page. Note: the nested player iframe loads
+  // its own copy directly (never through this proxy), and its document.domain check
+  // fires under ANY sandbox attribute regardless of tokens — which is why the client
+  // <iframe> must NOT be sandboxed. See packages/server/README.md "Sandbox tradeoffs".
   /\/sbx\.js/i,
   // Random hash paths on obscure TLDs used for tracking/malware
   /[a-z0-9]{8,}\.(cfd|rest)\//i,
@@ -62,12 +65,31 @@ export const cleanEmbedHtml = (html: string): string => {
 };
 
 export type EmbedResult =
-  | { ok: true; html: string }
+  | {
+      ok: true;
+      html: string;
+      /** Final upstream URL after redirects (vsrc.su 301s to a mirror domain) */
+      finalUrl?: string;
+    }
   | {
       ok: false;
       status: ContentfulStatusCode;
       message: string;
     };
+
+// The embed page references root-relative resources (/style.css, /sources.js,
+// /base64.js, ...). Served from our origin those would resolve against the app
+// host and 404 — most visibly style.css, without which html/body have no height
+// and the player iframe's height:100% collapses to the 150px default. A <base>
+// tag pointing at the upstream page restores resolution to the embed host.
+export const injectBaseHref = (html: string, baseUrl: string): string => {
+  if (/<base\b/i.test(html)) return html;
+  const tag = `<base href="${baseUrl.replace(/"/g, '%22')}">`;
+  if (/<head[^>]*>/i.test(html)) {
+    return html.replace(/<head[^>]*>/i, match => `${match}${tag}`);
+  }
+  return tag + html;
+};
 
 const HEADERS = {
   'User-Agent':
@@ -105,6 +127,7 @@ export const fetchRawHtml = async (url?: string): Promise<EmbedResult> => {
     return {
       ok: true,
       html: await response.text(),
+      finalUrl: response.url || url,
     };
   } catch {
     return {
@@ -121,6 +144,9 @@ export const getEmbed = async (url?: string): Promise<EmbedResult> => {
     return rawResult;
   }
 
-  const cleanedHtml = cleanEmbedHtml(rawResult.html);
+  let cleanedHtml = cleanEmbedHtml(rawResult.html);
+  if (rawResult.finalUrl) {
+    cleanedHtml = injectBaseHref(cleanedHtml, rawResult.finalUrl);
+  }
   return { ok: true, html: cleanedHtml };
 };

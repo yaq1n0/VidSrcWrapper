@@ -68,7 +68,6 @@
             allow="fullscreen; picture-in-picture"
             allowfullscreen
             referrerpolicy="no-referrer"
-            sandbox="allow-scripts allow-same-origin"
           ></iframe>
         </div>
       </div>
